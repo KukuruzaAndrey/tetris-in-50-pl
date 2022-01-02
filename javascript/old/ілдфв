@@ -1,4 +1,4 @@
-const brick = '\u001B[7m \u001B[m'
+const border = '\u001B[7m \u001B[m'
 
 const boardW = 10
 const boardH = 20
@@ -146,9 +146,9 @@ const render = (state) => {
     res += '.'
     for (let x = 0; x < boardW; x++) {
       if (board(x, y) === 1) {
-        res += brick
+        res += border
       } else if (state.figCoords.some(([xc, yc]) => xc === x && yc === y)) {
-        res += brick
+        res += border
       } else {
         res += ' '
       }
