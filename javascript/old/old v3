@@ -11,7 +11,7 @@ const Reset = '\u001b[m'
 const boardW = 10
 const boardH = 20
 const moves = {
-  auto: 0, left: 1, right: 2, down: 3, rotateClockwise: 4, rotateCounterClockwise: 5,
+  tick: 0, left: 1, right: 2, down: 3, rotateClockwise: 4, rotateCounterClockwise: 5,
 }
 const states = {
   start: 0, newPiece: 1, move: 2, beforeNewPiece: 3, end: 4
@@ -93,7 +93,7 @@ const update = ({ board, figIndex, rotateIndex, color, offsetX, offsetY, move, s
 
       // update piece position
       switch (move) {
-        case moves.auto:
+        case moves.tick:
         case moves.down:
           offsetY += 1
           break
@@ -159,7 +159,7 @@ const update = ({ board, figIndex, rotateIndex, color, offsetX, offsetY, move, s
 
       // update piece position
       switch (move) {
-        case moves.auto:
+        case moves.tick:
         case moves.down:
           offsetY += 1
           break
@@ -305,7 +305,7 @@ const step = () => {
 }
 const int = setInterval(() => {
   if (state.state !== states.end) {
-    state.move = moves.auto
+    state.move = moves.tick
     step(state)
     // state = update(state)
     // console.log(render(state))

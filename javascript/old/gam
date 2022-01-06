@@ -27,7 +27,7 @@ const getRandomIntInclusive = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 const moves = {
-  auto: 0,
+  tick: 0,
   left: 1,
   right: 2,
   down: 3,
@@ -120,7 +120,7 @@ const canRotate = (newRot) => {
 }
 const handleMove = state => {
   switch (state.move) {
-    case moves.auto:
+    case moves.tick:
     case moves.down:
       state.offset[1] += 1
       break
@@ -175,7 +175,7 @@ const update = (state) => {
         state.board[y][x] = 0
       })
       switch (state.move) {
-        case moves.auto:
+        case moves.tick:
         case moves.down:
           const newFigCoords = getFigCoords(state.active, [state.offset[0], state.offset[1] + 1])
           if (newFigCoords.some(([x, y]) => y === boardH || !boardIsFree(x, y))) {
@@ -304,7 +304,7 @@ const step = state => {
 }
 const int = setInterval(() => {
   if (state !== 'game_over') {
-    state.move = moves.auto
+    state.move = moves.tick
     step(state)
   } else {
     clearInterval(int)

@@ -7,7 +7,7 @@ const getRandomIntInclusive = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 const moves = {
-  auto: 0,
+  tick: 0,
   left: 1,
   right: 2,
   down: 3,
@@ -91,7 +91,7 @@ const getCurrPiece = () => state.active[state.rotation]
 
 const update = (state) => {
   switch (state.move) {
-    case moves.auto:
+    case moves.tick:
     case moves.down:
       state.offset[1] += 1
       break
@@ -172,7 +172,7 @@ const step = state => {
 const int = setInterval(() => {
   if (state !== 'game_over') {
     // console.log(move.turn)
-    state.move = moves.auto
+    state.move = moves.tick
     step(state)
     // move = step(move)
     // console.log(JSON.stringify(move))

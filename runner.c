@@ -6,8 +6,9 @@
 #include <unistd.h>
 #include <termios.h>
 
-#define FRAME_TIME_MS (500)
+#define FRAME_TIME_MS (400)
 #define FRAME_TIME_NS (FRAME_TIME_MS * 1000 * 1000)
+#define CTRL_KEY(k) ((k) & 0x1f)
 
 static uint32_t get_nanos(void) {
     struct timespec ts;
@@ -22,26 +23,7 @@ int8_t kbhit() {
     FD_SET(0, &fds);
     return select(1, &fds, NULL, NULL, &tv) > 0;
 }
-
-//int8_t getch() {
-//    int r;
-//    unsigned char c;
-//    if ((r = read(STDIN_FILENO, &c, sizeof(c))) < 0) {
-//        return r;
-//    } else {
-//        return c;
-//    }
-//}
-
-FILE *fp;
-char path[1035];
-char cmdBuff[1035];
-char arg[200] = "3 4 4 6 2 7 2 8 2";
-char *cmd = "./game-core.js";
-
 struct termios original;
-
-#define CTRL_KEY(k) ((k) & 0x1f)
 
 void disableRawMode() {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
@@ -57,6 +39,12 @@ void enableRawMode() {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
+FILE *fp;
+char path[1035];
+char cmdBuff[1035];
+char arg[500] = "";
+char *cmd;
+
 void editorProcessKeypress(char *arg) {
     char c, n;
     read(STDIN_FILENO, &c, sizeof(c));
@@ -67,22 +55,26 @@ void editorProcessKeypress(char *arg) {
             read(STDIN_FILENO, &n, 1);
             if (n == '[') {
                 read(STDIN_FILENO, &n, 1);
-//                1: "left", 2: "down", 3: "right", 4: "up",
+//                 tick: 0, left: 1, right: 2, down: 3, rotateClockwise: 4, rotateCounterClockwise: 5,
                 switch (n) {
+                    case 'B':
+                        arg[0] = '3';
+                        break;
+                    case 'C':
+                        arg[0] = '2';
+                        break;
                     case 'D':
                         arg[0] = '1';
                         break;
-                    case 'A':
-                        arg[0] = '4';
-                        break;
-                    case 'C':
-                        arg[0] = '3';
-                        break;
-                    case 'B':
-                        arg[0] = '2';
-                        break;
                 }
             }
+            break;
+        case 'z':
+            arg[0] = '4';
+            break;
+        case 'x':
+            arg[0] = '5';
+            break;
 
     }
 }
@@ -90,18 +82,34 @@ void editorProcessKeypress(char *arg) {
 void eval() {
     snprintf(cmdBuff, sizeof(cmdBuff), "%s %s", cmd, arg);
     fp = popen(cmdBuff, "r");
+    if (fp == NULL) {
+        printf("%s", cmdBuff);
+        perror("a");
+    }
     unsigned i = 0;
     while (fgets(path, sizeof(path), fp) != NULL) {
         if (i == 0) {
+        printf("-0-");
             strncpy(arg, path, sizeof(arg));
-            i++;
+                        printf("~%s~", path);
+            if (!strcmp(path, "The End")) {
+            printf("here");
+            return exit(0);
+            };
+
+
+            i = 1;
         } else {
+        printf("-1-");
             printf("%s", path);
         }
     }
+    fclose(fp);
 }
 
-int main(void) {
+int main(int argc, char **argv) {
+    cmd = argv[1];
+//     printf("%s", cmd);
     enableRawMode();
     uint32_t nanos;
     uint32_t last_nanos;
@@ -109,15 +117,20 @@ int main(void) {
     last_nanos = nanos;
     while (1) {
         nanos = get_nanos();
-        if (kbhit()) {
-            editorProcessKeypress(arg);
-            eval();
-            last_nanos = nanos;
-        } else if (nanos - last_nanos > FRAME_TIME_NS) {
-//            printf("%ld", (nanos - last_nanos) / 1000000);
+        if (nanos - last_nanos > FRAME_TIME_NS) {
+            arg[0] = '0';
             eval();
             last_nanos = nanos;
         }
+        if (kbhit()) {
+            editorProcessKeypress(arg);
+            eval();
+        }
+        //last_nanos = nanos;
+//          else if (nanos - last_nanos > FRAME_TIME_NS) {
+//            printf("%ld", (nanos - last_nanos) / 1000000);
+
+//         }
     }
     return EXIT_SUCCESS;
 }
