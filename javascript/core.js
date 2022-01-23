@@ -65,6 +65,7 @@ const createBoard = (boardW, boardH) => {
   return board
 }
 
+/*
 const paintPiece = ({ board, figIndex, rotateIndex, offsetX, offsetY, color }) => {
   const coords = getFigCoords({ figIndex, rotateIndex, offsetX, offsetY, })
   for (const [x, y] of coords) {
@@ -79,12 +80,12 @@ const clearPiece = ({ board, figIndex, rotateIndex, offsetX, offsetY }) => paint
   offsetX,
   offsetY,
   color: 0
-})
+}) */
 
 const getFigCoords = ({ figIndex, rotateIndex, offsetX, offsetY, }) =>
   figures[figIndex][rotateIndex].squares
     .map(([x, y]) => [x + offsetX + figures[figIndex][rotateIndex].ofx, y + offsetY + figures[figIndex][rotateIndex].ofy])
-    .filter(([x, y]) => y >= 0)
+    .filter(([_, y]) => y >= 0)
 
 const init = () => {
   const move = moves.tick
@@ -93,7 +94,7 @@ const init = () => {
   const rotateIndex = 0
   const color = getRandomIntInclusive(1, backColors.length - 1)
   const offsetX = figIndex === 0 ? 3 : 4
-  const offsetY = -1 * figures[figIndex][rotateIndex].ofy
+  const offsetY = -1 * figures[figIndex][rotateIndex].ofy - 1
   const nextFigIndex = getRandomIntInclusive(0, figures.length - 1)
   const nextFigColor = getRandomIntInclusive(1, backColors.length - 1)
   const score = 0
@@ -144,7 +145,6 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
   }
 
   // calculate new coordinates
-  // console.log({ figIndex, ...newPos })
   const newCoords = getFigCoords({ figIndex, ...newPos })
 
   // check is new position is overlap or on floor
@@ -186,7 +186,6 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
       // console.log(newCoords)
       console.log('The End')
       process.exit()
-      return
     }
 
     // add new piece to board
@@ -200,7 +199,7 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     // for (const [x, y] of newCoords) {
     //   board[y][x] = color
     // }
-    ({rotateIndex, offsetX, offsetY} = newPos)
+    ({ rotateIndex, offsetX, offsetY } = newPos)
   }
 
   return { move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }
@@ -327,8 +326,8 @@ const printState = ({
 const parseState = () => {
   const move = parseInt(process.argv[2])
   const board = []
-  for (let i = 0; i < process.argv[3].length; i = i + 10) {
-    board.push(process.argv[3].slice(i, i + 10).split('').map(c => parseInt(c)))
+  for (let i = 0; i < process.argv[3].length; i += boardW) {
+    board.push(process.argv[3].slice(i, i + boardW).split('').map(c => parseInt(c)))
   }
   // console.log(board.length)
   // console.log(board)
@@ -346,11 +345,14 @@ const parseState = () => {
 // console.log(process.argv.length)
 // console.log(process.argv.length)
 // console.log(process.argv)
-if (process.argv.length > 3) {
+if (process.argv[2] === '0init') {
+  const state = init()
+  printState(state)
+} else if (process.argv.length === 12) {
   const state = update(parseState())
   printState(state)
   console.log(render(state))
 } else {
-  const state = init()
-  printState(state)
+  console.log(process.argv)
+  throw Error('incorrect arguments')
 }

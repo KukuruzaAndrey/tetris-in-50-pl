@@ -23,6 +23,7 @@ int8_t kbhit() {
     FD_SET(0, &fds);
     return select(1, &fds, NULL, NULL, &tv) > 0;
 }
+
 struct termios original;
 
 void disableRawMode() {
@@ -42,7 +43,7 @@ void enableRawMode() {
 FILE *fp;
 char path[1035];
 char cmdBuff[1035];
-char arg[500] = "";
+char arg[500] = "0init";
 char *cmd;
 
 void editorProcessKeypress(char *arg) {
@@ -89,18 +90,13 @@ void eval() {
     unsigned i = 0;
     while (fgets(path, sizeof(path), fp) != NULL) {
         if (i == 0) {
-        printf("-0-");
             strncpy(arg, path, sizeof(arg));
-                        printf("~%s~", path);
-            if (!strcmp(path, "The End")) {
-            printf("here");
-            return exit(0);
+            if (strcmp(path, "The End\n") == 0) {
+                exit(0);
             };
-
 
             i = 1;
         } else {
-        printf("-1-");
             printf("%s", path);
         }
     }
@@ -108,8 +104,11 @@ void eval() {
 }
 
 int main(int argc, char **argv) {
+    if (argc < 2) {
+        printf("%s\n", "provide arguments");
+        exit(1);
+    }
     cmd = argv[1];
-//     printf("%s", cmd);
     enableRawMode();
     uint32_t nanos;
     uint32_t last_nanos;
