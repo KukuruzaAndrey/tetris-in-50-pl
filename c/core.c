@@ -60,20 +60,25 @@ void parseState(char **argv, struct state *dest) {
   dest->score = *argv[10] - '0';
 }
 
-void calcFigCoords(unsigned squares[4][2], unsigned figIndex, unsigned rotateIndex, unsigned offsetX, int offsetY) {
+void calcFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex, unsigned offsetX, int offsetY) {
+  unsigned count = 0;
   for (unsigned i = 0; i < 4; ++i) {
     // check overflow !
-    squares[i][0] =
-      figures[figIndex].rotations[rotateIndex].squares[i][0] + offsetX + figures[figIndex].rotations[rotateIndex].ofx;
-    squares[i][1] =
-      figures[figIndex].rotations[rotateIndex].squares[i][1] + offsetY + figures[figIndex].rotations[rotateIndex].ofy;
+    unsigned y = figures[figIndex].rotations[rotateIndex].squares[count][1] + offsetY + figures[figIndex].rotations[rotateIndex].ofy;
+    if (y > 20)
+      continue;
+
+    count += 1;
+    coords->squares[count][0] =
+      figures[figIndex].rotations[rotateIndex].squares[count][0] + offsetX + figures[figIndex].rotations[rotateIndex].ofx;
+    squares[count][1] = y;
   }
-  // filter negative!
+  coords->count = count;
 }
 
 void update(struct state *state) {
-  unsigned oldCoords[4][2];
-  calcFigCoords(oldCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
+  struct coords oldCoords;
+  calcFigCoords(&oldCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
 
   unsigned newRotateIndex = state->rotateIndex;
   unsigned newOffsetX = state->offsetX;
@@ -89,9 +94,9 @@ void update(struct state *state) {
       if (state->offsetX + figures[state->figIndex].rotations[state->rotateIndex].ofx <= 0)
         break;
       unsigned left_blocked = 0;
-      for (unsigned i = 0; i < 4; ++i) {
-        unsigned x = oldCoords[i][0];
-        unsigned y = oldCoords[i][1];
+      for (unsigned i = 0; i < oldCoords.count; ++i) {
+        unsigned x = oldCoords.squares[i][0];
+        unsigned y = oldCoords.squares[i][1];
         if (state->board[y][x - 1] != 0) {
           left_blocked = 1;
           break;
@@ -106,9 +111,9 @@ void update(struct state *state) {
           figures[state->figIndex].rotations[state->rotateIndex].ofx >= BOARD_W)
         break;
       unsigned right_blocked = 0;
-      for (unsigned i = 0; i < 4; ++i) {
-        unsigned x = oldCoords[i][0];
-        unsigned y = oldCoords[i][1];
+      for (unsigned i = 0; i < oldCoords.count; ++i) {
+        unsigned x = oldCoords.squares[i][0];
+        unsigned y = oldCoords.squares[i][1];
         if (state->board[y][x + 1] != 0) {
           right_blocked = 1;
           break;
@@ -121,12 +126,12 @@ void update(struct state *state) {
     case rotateClockwise: {
       unsigned possibleRotateIndex = (state->rotateIndex == figures[state->figIndex].count - 1) ? 0 :
                                      state->rotateIndex + 1;
-      unsigned rotateFigCoords[4][2];
-      calcFigCoords(rotateFigCoords, state->figIndex, possibleRotateIndex, state->offsetX, state->offsetY);
+      struct coords rotateFigCoords;
+      calcFigCoords(&rotateFigCoords, state->figIndex, possibleRotateIndex, state->offsetX, state->offsetY);
       unsigned rotate_clockwise_blocked = 0;
-      for (unsigned i = 0; i < 4; ++i) {
-        unsigned x = oldCoords[i][0];
-        unsigned y = oldCoords[i][1];
+      for (unsigned i = 0; i < rotateFigCoords.count; ++i) {
+        unsigned x = rotateFigCoords.squares[i][0];
+        unsigned y = rotateFigCoords.squares[i][1];
         if (x < 0 || x >= BOARD_W || state->board[y][x] != 0) {
           rotate_clockwise_blocked = 1;
           break;
@@ -143,9 +148,9 @@ void update(struct state *state) {
       unsigned rotateFigCoords[4][2];
       calcFigCoords(rotateFigCoords, state->figIndex, possibleRotateIndex, state->offsetX, state->offsetY);
       unsigned rotate_counter_clockwise_blocked = 0;
-      for (unsigned i = 0; i < 4; ++i) {
-        unsigned x = oldCoords[i][0];
-        unsigned y = oldCoords[i][1];
+      for (unsigned i = 0; i < oldCoords.count; ++i) {
+        unsigned x = oldCoords.squares[i][0];
+        unsigned y = oldCoords.squares[i][1];
         if (x < 0 || x >= BOARD_W || state->board[y][x] != 0) {
           rotate_counter_clockwise_blocked = 1;
           break;
@@ -159,14 +164,14 @@ void update(struct state *state) {
   }
 
   // calculate new coordinates
-  unsigned newCoords[4][2];
+  struct coords newCoords;
   calcFigCoords(newCoords, state->figIndex, newRotateIndex, newOffsetX, newOffsetY);
 
   // check is new position is overlap or on floor
   unsigned overlap = 0;
-  for (unsigned i = 0; i < 4; ++i) {
-    unsigned x = oldCoords[i][0];
-    unsigned y = oldCoords[i][1];
+  for (unsigned i = 0; i < newCoords.count; ++i) {
+    unsigned x = newCoords.squares[i][0];
+    unsigned y = newCoords.squares[i][1];
     if (y == BOARD_H || state->board[y][x] != 0) {
       overlap = 1;
       break;
@@ -175,9 +180,9 @@ void update(struct state *state) {
 
   if (overlap) {
     // paint piece back
-    for (unsigned i = 0; i < 4; ++i) {
-      unsigned x = oldCoords[i][0];
-      unsigned y = oldCoords[i][1];
+    for (unsigned i = 0; i < oldCoords.count; ++i) {
+      unsigned x = oldCoords.squares[i][0];
+      unsigned y = oldCoords.squares[i][1];
       state->board[y][x] = state->color;
     }
 

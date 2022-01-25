@@ -4,6 +4,11 @@
 #define FIG_COUNT 7
 #define COLORS_COUNT 8
 
+struct coords {
+  unsigned count;
+  unsigned squares[4][2];
+};
+
 struct rotation {
   unsigned squares[4][2];
   unsigned h;
