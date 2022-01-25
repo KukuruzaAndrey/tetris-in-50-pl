@@ -4,14 +4,18 @@
 #define FIG_COUNT 7
 #define COLORS_COUNT 8
 
-struct figure {
-  int squares[4][2];
-  int h;
-  int w;
-  int ofx;
-  int ofy;
+struct rotation {
+  unsigned squares[4][2];
+  unsigned h;
+  unsigned w;
+  unsigned ofx;
+  unsigned ofy;
 };
 
+struct figure {
+  unsigned count;
+  struct rotation rotations[4];
+};
 enum move {
   tick = 0,
   left,
@@ -46,38 +50,59 @@ const char *backColors[] = {
   "\033[47m", // BackgroundWhite
 };
 
-const struct figure figures[FIG_COUNT][4] = {
+const struct figure figures[FIG_COUNT] = {
   {
-    { .squares = {{0, 0}, {1, 0}, {2, 0}, {3, 0}}, .h = 1, .w = 4, .ofx = 0, .ofy = 2 },
-    { .squares = {{0, 0}, {0, 1}, {0, 2}, {0, 3}}, .h = 4, .w = 1, .ofx = 2, .ofy = 0 },
+    .count = 2,
+    .rotations = {
+      { .squares = {{0, 0}, {1, 0}, {2, 0}, {3, 0}}, .h = 1, .w = 4, .ofx = 0, .ofy = 2 },
+      { .squares = {{0, 0}, {0, 1}, {0, 2}, {0, 3}}, .h = 4, .w = 1, .ofx = 2, .ofy = 0 },
+    }
   }, // I
   {
-    { .squares = {{0, 0}, {1, 0}, {2, 0}, {0, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
-    { .squares = {{0, 0}, {1, 0}, {1, 1}, {1, 2}}, .h = 3, .w = 2, .ofx = 0, .ofy = 0 },
-    { .squares = {{0, 1}, {1, 1}, {2, 1}, {2, 0}}, .h = 2, .w = 3, .ofx = 0, .ofy = 0 },
-    { .squares = {{0, 0}, {0, 1}, {0, 2}, {1, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    .count = 4,
+    .rotations = {
+      { .squares = {{0, 0}, {1, 0}, {1, 1}, {1, 2}}, .h = 3, .w = 2, .ofx = 0, .ofy = 0 },
+      { .squares = {{0, 0}, {1, 0}, {2, 0}, {0, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
+      { .squares = {{0, 1}, {1, 1}, {2, 1}, {2, 0}}, .h = 2, .w = 3, .ofx = 0, .ofy = 0 },
+      { .squares = {{0, 0}, {0, 1}, {0, 2}, {1, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    }
   }, // L
   {
-    { .squares = {{0, 0}, {1, 0}, {2, 0}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
-    { .squares = {{1, 0}, {1, 1}, {1, 2}, {0, 2}}, .h = 3, .w = 2, .ofx = 0, .ofy = 0 },
-    { .squares = {{0, 0}, {0, 1}, {1, 1}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 0 },
-    { .squares = {{0, 0}, {1, 0}, {0, 1}, {0, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    .count = 4,
+    .rotations = {
+      { .squares = {{0, 0}, {1, 0}, {2, 0}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
+      { .squares = {{1, 0}, {1, 1}, {1, 2}, {0, 2}}, .h = 3, .w = 2, .ofx = 0, .ofy = 0 },
+      { .squares = {{0, 0}, {0, 1}, {1, 1}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 0 },
+      { .squares = {{0, 0}, {1, 0}, {0, 1}, {0, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    }
   }, // Г
   {
-    { .squares = {{1, 0}, {2, 0}, {0, 1}, {1, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
-    { .squares = {{0, 0}, {0, 1}, {1, 1}, {1, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    .count = 2,
+    .rotations = {
+      { .squares = {{1, 0}, {2, 0}, {0, 1}, {1, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
+      { .squares = {{0, 0}, {0, 1}, {1, 1}, {1, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    }
   }, // S
   {
-    { .squares = {{0, 0}, {1, 0}, {1, 1}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
-    { .squares = {{0, 1}, {1, 0}, {1, 1}, {0, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    .count = 2,
+    .rotations = {
+      { .squares = {{0, 0}, {1, 0}, {1, 1}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
+      { .squares = {{0, 1}, {1, 0}, {1, 1}, {0, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    }
   }, // Z
   {
-    { .squares = {{0, 0}, {0, 1}, {1, 1}, {1, 0}}, .h = 2, .w = 2, .ofx = 0, .ofy = 0 },
+    .count = 1,
+    .rotations = {
+      { .squares = {{0, 0}, {0, 1}, {1, 1}, {1, 0}}, .h = 2, .w = 2, .ofx = 0, .ofy = 0 },
+    }
   }, // O
   {
-    { .squares = {{0, 0}, {1, 0}, {2, 0}, {1, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
-    { .squares = {{1, 0}, {0, 1}, {1, 1}, {1, 2}}, .h = 3, .w = 2, .ofx = 0, .ofy = 0 },
-    { .squares = {{1, 0}, {0, 1}, {1, 1}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 0 },
-    { .squares = {{0, 0}, {0, 1}, {0, 2}, {1, 1}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    .count = 2,
+    .rotations = {
+      { .squares = {{0, 0}, {1, 0}, {2, 0}, {1, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
+      { .squares = {{1, 0}, {0, 1}, {1, 1}, {1, 2}}, .h = 3, .w = 2, .ofx = 0, .ofy = 0 },
+      { .squares = {{1, 0}, {0, 1}, {1, 1}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 0 },
+      { .squares = {{0, 0}, {0, 1}, {0, 2}, {1, 1}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
+    }
   }  // T
 };

@@ -85,7 +85,7 @@ const clearPiece = ({ board, figIndex, rotateIndex, offsetX, offsetY }) => paint
 const getFigCoords = ({ figIndex, rotateIndex, offsetX, offsetY, }) =>
   figures[figIndex][rotateIndex].squares
     .map(([x, y]) => [x + offsetX + figures[figIndex][rotateIndex].ofx, y + offsetY + figures[figIndex][rotateIndex].ofy])
-    .filter(([_, y]) => y >= 0)
+    .filter(([_, y]) => y >= 0) // don't care about segments above top of the screen
 
 const init = () => {
   const move = moves.tick
@@ -94,7 +94,7 @@ const init = () => {
   const rotateIndex = 0
   const color = getRandomIntInclusive(1, backColors.length - 1)
   const offsetX = figIndex === 0 ? 3 : 4
-  const offsetY = -1 * figures[figIndex][rotateIndex].ofy - 1
+  const offsetY = -1 * figures[figIndex][rotateIndex].ofy - 1 // ???
   const nextFigIndex = getRandomIntInclusive(0, figures.length - 1)
   const nextFigColor = getRandomIntInclusive(1, backColors.length - 1)
   const score = 0
