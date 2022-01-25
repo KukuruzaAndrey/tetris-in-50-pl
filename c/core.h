@@ -111,3 +111,11 @@ const struct figure figures[FIG_COUNT] = {
     }
   }  // T
 };
+
+#define Reset "\x1B[m"
+#define Inverse "\x1B[7m"
+#define Ceil "\u2582"
+#define Floor Inverse "\u2586" Reset
+#define Left Inverse "\u258a" Reset
+#define Right "\u258e"
+#define spacer "."

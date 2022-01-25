@@ -17,14 +17,13 @@ unsigned randomIntInclusive(unsigned min, unsigned max) {
 }
 
 void initState(struct state *state) {
-  unsigned figIndex = randomIntInclusive(0, FIG_COUNT - 1);
   state->move = tick;
   memset(state->board, 0, sizeof(state->board));
-  state->figIndex = figIndex;
+  state->figIndex = randomIntInclusive(0, FIG_COUNT - 1);;
   state->rotateIndex = 0;
   state->color = randomIntInclusive(1, COLORS_COUNT - 1);
-  state->offsetX = figIndex == 0 ? 3 : 4;
-  state->offsetY = -1 * (int) figures[figIndex].rotations[0/*rotateIndex*/].ofy - 1;
+  state->offsetX = state->figIndex == 0 ? 3 : 4;
+  state->offsetY = -1 * (int) figures[state->figIndex].rotations[0/*rotateIndex*/].ofy - 1;
   state->nextFigIndex = randomIntInclusive(0, FIG_COUNT - 1);
   state->nextFigColor = randomIntInclusive(1, COLORS_COUNT - 1);
   state->score = 0;
@@ -64,14 +63,16 @@ void calcFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateInde
   unsigned count = 0;
   for (unsigned i = 0; i < 4; ++i) {
     // check overflow !
-    unsigned y = figures[figIndex].rotations[rotateIndex].squares[count][1] + offsetY + figures[figIndex].rotations[rotateIndex].ofy;
+    unsigned y = figures[figIndex].rotations[rotateIndex].squares[count][1] + offsetY +
+                 figures[figIndex].rotations[rotateIndex].ofy;
     if (y > 20)
       continue;
 
     count += 1;
     coords->squares[count][0] =
-      figures[figIndex].rotations[rotateIndex].squares[count][0] + offsetX + figures[figIndex].rotations[rotateIndex].ofx;
-    squares[count][1] = y;
+      figures[figIndex].rotations[rotateIndex].squares[count][0] + offsetX +
+      figures[figIndex].rotations[rotateIndex].ofx;
+    coords->squares[count][1] = y;
   }
   coords->count = count;
 }
@@ -145,8 +146,8 @@ void update(struct state *state) {
     case rotateCounterClockwise: {
       unsigned possibleRotateIndex = (state->rotateIndex == 0) ? figures[state->figIndex].count - 1 :
                                      state->rotateIndex - 1;
-      unsigned rotateFigCoords[4][2];
-      calcFigCoords(rotateFigCoords, state->figIndex, possibleRotateIndex, state->offsetX, state->offsetY);
+      struct coords rotateFigCoords;
+      calcFigCoords(&rotateFigCoords, state->figIndex, possibleRotateIndex, state->offsetX, state->offsetY);
       unsigned rotate_counter_clockwise_blocked = 0;
       for (unsigned i = 0; i < oldCoords.count; ++i) {
         unsigned x = oldCoords.squares[i][0];
@@ -165,7 +166,7 @@ void update(struct state *state) {
 
   // calculate new coordinates
   struct coords newCoords;
-  calcFigCoords(newCoords, state->figIndex, newRotateIndex, newOffsetX, newOffsetY);
+  calcFigCoords(&newCoords, state->figIndex, newRotateIndex, newOffsetX, newOffsetY);
 
   // check is new position is overlap or on floor
   unsigned overlap = 0;
@@ -188,7 +189,6 @@ void update(struct state *state) {
 
     // remove full lines
     unsigned countFullLines = 0;
-//    unsigned long fullLinesMask = 0;
     for (unsigned y = 0; y < BOARD_H; ++y) {
       unsigned full = 1;
       for (unsigned x = 0; x < BOARD_W; ++x) {
@@ -200,7 +200,6 @@ void update(struct state *state) {
       if (full) {
         memmove(state->board[y], state->board[countFullLines], (y - countFullLines) * (sizeof state->board[y]));
         countFullLines++;
-//        fullLinesMask |= (1 << y);
       }
     }
 
@@ -212,9 +211,40 @@ void update(struct state *state) {
       memset(state->board[0], 0, countFullLines * (sizeof state->board[0]));
     }
 
+    // create new piece
+    state->figIndex = state->nextFigIndex;
+    state->nextFigIndex = randomIntInclusive(0, FIG_COUNT - 1);
+    state->rotateIndex = 0;
+    state->offsetX = state->figIndex == 0 ? 3 : 4;
+    state->offsetY = -1 * (int) figures[state->figIndex].rotations[0/*rotateIndex*/].ofy - 1;
+    state->color = state->nextFigColor;
+    state->nextFigColor = randomIntInclusive(1, COLORS_COUNT - 1);
 
+    struct coords newCoords;
+    calcFigCoords(&newCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
+
+    // check end of game
+    unsigned end = 0;
+    for (unsigned i = 0; i < newCoords.count; ++i) {
+      unsigned x = newCoords.squares[i][0];
+      unsigned y = newCoords.squares[i][1];
+      if (state->board[y][x] != 0) {
+        end = 1;
+        break;
+      }
+    }
+    if (end) {
+      printf("%s", "The End");
+      exit(0);
+    }
+  } else {
+    state->rotateIndex = newRotateIndex;
+    state->offsetX = newOffsetX;
+    state->offsetY = newOffsetY;
   }
+}
 
+void render(struct state *state) {
 
 }
 
@@ -228,6 +258,7 @@ int main(int argc, char **argv) {
     parseState(argv, &state);
     update(&state);
     printState(&state);
+    render(&state);
   } else {
     puts("incorrect arguments");
     exit(1);
