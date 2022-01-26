@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "stdio.h"
 #include "string.h"
 #include "stdlib.h"
@@ -244,7 +245,58 @@ void update(struct state *state) {
   }
 }
 
-void render(struct state *state) {
+void render(char *res, struct state *state) {
+
+  // add piece to board for simplifying render
+  struct coords coords;
+  calcFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
+  for (unsigned i = 0; i < coords.count; ++i) {
+    unsigned x = coords.squares[i][0];
+    unsigned y = coords.squares[i][1];
+    state->board[y][x] = state->color;
+  }
+
+  char *bucket = stpcpy(res, " ");
+  for (unsigned x = 0; x < BOARD_W; x++) {
+    bucket = stpcpy(bucket, Ceil);
+  }
+  bucket = stpcpy(bucket, " \n");
+
+  for (unsigned y = 0; y < BOARD_H; y++) {
+    bucket = stpcpy(bucket, Left);
+    for (unsigned x = 0; x < BOARD_W; x++) {
+      if (state->board[y][x] != 0) {
+        bucket = stpcpy(bucket, backColors[state->board[y][x]]);
+        bucket = stpcpy(bucket, " ");
+        bucket = stpcpy(bucket, Reset);
+      } else {
+        bucket = stpcpy(bucket, (x % 2 == 0) ? " " : spacer);
+      }
+    }
+    bucket = stpcpy(bucket, Right);
+
+//    if (y == = 0) {
+//      res += ' ' + String(score).padStart(6, '0')
+//    }
+//
+//    if (y > 0 && y - 1 < nP.length) {
+//      res += nP[y - 1]
+//    }
+
+    bucket = stpcpy(bucket, "\n");
+  }
+
+  bucket = stpcpy(bucket, " ");
+  for (unsigned x = 0; x < BOARD_W; x++) {
+    bucket = stpcpy(bucket, Floor);
+  }
+  bucket = stpcpy(bucket, " ");
+
+  for (unsigned i = 0; i < coords.count; ++i) {
+    unsigned x = coords.squares[i][0];
+    unsigned y = coords.squares[i][1];
+    state->board[y][x] = 0;
+  }
 
 }
 
@@ -258,7 +310,9 @@ int main(int argc, char **argv) {
     parseState(argv, &state);
     update(&state);
     printState(&state);
-    render(&state);
+    char res[1500];
+    render(res, &state);
+    printf("%s\n", res);
   } else {
     puts("incorrect arguments");
     exit(1);

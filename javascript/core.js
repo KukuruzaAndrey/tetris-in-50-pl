@@ -258,19 +258,19 @@ const renderNextPiece = (figIndex, color) => {
 }
 
 const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }) => {
+
+  // add piece to board for simplifying render
   const coords = getFigCoords({ figIndex, rotateIndex, offsetX, offsetY })
   for (const [x, y] of coords) {
     board[y][x] = color
   }
 
   const nP = renderNextPiece(nextFigIndex, nextFigColor)
-  let res = ''
-  res += ' '
+  let res = ' '
   for (let x = 0; x < boardW; x++) {
     res += ceil
   }
-  res += ' '
-  res += '\n'
+  res += ' \n'
 
   for (let y = 0; y < boardH; y++) {
     res += left
