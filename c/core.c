@@ -38,26 +38,26 @@ void printState(const struct state *state) {
     }
   }
   strBoard[BOARD_H * BOARD_W] = 0;
-  printf("%u %s %u %u %u %u %d %u %u %u\n",
+  printf("%u %s %u %u %u %d %d %u %u %u\n",
          state->move, strBoard, state->figIndex, state->rotateIndex, state->color,
          state->offsetX, state->offsetY, state->nextFigIndex, state->nextFigColor, state->score);
 }
 
 void parseState(char **argv, struct state *dest) {
-  dest->move = (enum move) (*argv[1] - '0');
+  dest->move = (enum move) (atoi(argv[1]));
   for (unsigned i = 0; i < BOARD_H * BOARD_W; ++i) {
     unsigned y = i / BOARD_W;
     unsigned x = i % BOARD_W;
     dest->board[y][x] = argv[2][i] - '0';
   }
-  dest->figIndex = *argv[3] - '0';
-  dest->rotateIndex = *argv[4] - '0';
-  dest->color = *argv[5] - '0';
-  dest->offsetX = *argv[6] - '0';
-  dest->offsetY = *argv[7] - '0';
-  dest->nextFigIndex = *argv[8] - '0';
-  dest->nextFigColor = *argv[9] - '0';
-  dest->score = *argv[10] - '0';
+  dest->figIndex = atoi(argv[3]);
+  dest->rotateIndex = atoi(argv[4]);
+  dest->color = atoi(argv[5]);
+  dest->offsetX = atoi(argv[6]);
+  dest->offsetY = atoi(argv[7]);
+  dest->nextFigIndex = atoi(argv[8]);
+  dest->nextFigColor = atoi(argv[9]);
+  dest->score = atoi(argv[10]);
 }
 
 void calcFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex, unsigned offsetX, int offsetY) {
@@ -69,11 +69,11 @@ void calcFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateInde
     if (y > 20)
       continue;
 
-    count += 1;
     coords->squares[count][0] =
       figures[figIndex].rotations[rotateIndex].squares[count][0] + offsetX +
       figures[figIndex].rotations[rotateIndex].ofx;
     coords->squares[count][1] = y;
+    count += 1;
   }
   coords->count = count;
 }
@@ -83,7 +83,7 @@ void update(struct state *state) {
   calcFigCoords(&oldCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
 
   unsigned newRotateIndex = state->rotateIndex;
-  unsigned newOffsetX = state->offsetX;
+  int newOffsetX = state->offsetX;
   int newOffsetY = state->offsetY;
 
   // update piece position
@@ -309,6 +309,7 @@ int main(int argc, char **argv) {
   } else if (argc == 11) {
     parseState(argv, &state);
     update(&state);
+    printState(&state);
     printState(&state);
     char res[1500];
     render(res, &state);
