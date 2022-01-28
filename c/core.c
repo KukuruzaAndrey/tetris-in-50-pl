@@ -60,7 +60,7 @@ void parseState(char **argv, struct state *dest) {
   dest->score = atoi(argv[10]);
 }
 
-void calcFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex, unsigned offsetX, int offsetY) {
+void calcFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex, int offsetX, int offsetY) {
   unsigned count = 0;
   for (unsigned i = 0; i < 4; ++i) {
     // check overflow !

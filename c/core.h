@@ -102,7 +102,7 @@ const struct figure figures[FIG_COUNT] = {
     }
   }, // O
   {
-    .count = 2,
+    .count = 4,
     .rotations = {
       { .squares = {{0, 0}, {1, 0}, {2, 0}, {1, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 1 },
       { .squares = {{1, 0}, {0, 1}, {1, 1}, {1, 2}}, .h = 3, .w = 2, .ofx = 0, .ofy = 0 },
