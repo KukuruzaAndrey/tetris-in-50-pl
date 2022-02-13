@@ -48,7 +48,7 @@ void parseState(char **argv, struct state *dest) {
   for (unsigned i = 0; i < BOARD_H * BOARD_W; ++i) {
     unsigned y = i / BOARD_W;
     unsigned x = i % BOARD_W;
-    dest->board[y][x] = argv[2][i] - '0';
+    dest->board[y][x] = atoi(&argv[2][i]);
   }
   dest->figIndex = atoi(argv[3]);
   dest->rotateIndex = atoi(argv[4]);

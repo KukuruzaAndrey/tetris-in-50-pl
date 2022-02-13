@@ -1,4 +1,6 @@
 .idea/
 
-a.out
-
+/*/core
+logs.txt
+runner
+test/test
