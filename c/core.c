@@ -65,13 +65,13 @@ void calcFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateInde
   for (unsigned i = 0; i < 4; ++i) {
     // check overflow !
     unsigned y = figures[figIndex].rotations[rotateIndex].squares[count][1] + offsetY +
-                 figures[figIndex].rotations[rotateIndex].ofy;
+            figures[figIndex].rotations[rotateIndex].ofy;
+    unsigned x = figures[figIndex].rotations[rotateIndex].squares[count][0] + offsetX +
+            figures[figIndex].rotations[rotateIndex].ofx;
     if (y > 20)
       continue;
 
-    coords->squares[count][0] =
-      figures[figIndex].rotations[rotateIndex].squares[count][0] + offsetX +
-      figures[figIndex].rotations[rotateIndex].ofx;
+    coords->squares[count][0] = x;
     coords->squares[count][1] = y;
     count += 1;
   }
@@ -128,9 +128,25 @@ void update(struct state *state) {
     case rotateClockwise: {
       unsigned possibleRotateIndex = (state->rotateIndex == figures[state->figIndex].count - 1) ? 0 :
                                      state->rotateIndex + 1;
-      struct coords rotateFigCoords;
-      calcFigCoords(&rotateFigCoords, state->figIndex, possibleRotateIndex, state->offsetX, state->offsetY);
+//      struct coords rotateFigCoords;
+//      calcFigCoords(&rotateFigCoords, state->figIndex, possibleRotateIndex, state->offsetX, state->offsetY);
+
       unsigned rotate_clockwise_blocked = 0;
+      for (unsigned i = 0; i < 4; ++i) {
+        // check overflow !
+        unsigned y = figures[state->figIndex].rotations[rotateIndex].squares[count][1] + offsetY +
+                     figures[state->figIndex].rotations[rotateIndex].ofy;
+        unsigned x = figures[state->figIndex].rotations[rotateIndex].squares[count][0] + offsetX +
+                     figures[state->figIndex].rotations[rotateIndex].ofx;
+        if (y > 20)
+          continue;
+
+        coords->squares[count][0] = x;
+        coords->squares[count][1] = y;
+        count += 1;
+      }
+
+
       for (unsigned i = 0; i < rotateFigCoords.count; ++i) {
         unsigned x = rotateFigCoords.squares[i][0];
         unsigned y = rotateFigCoords.squares[i][1];

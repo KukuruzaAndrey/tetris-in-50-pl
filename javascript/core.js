@@ -206,9 +206,8 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
 }
 
 
-// const border = '\u001B[7m \u001B[m'
-const Reset = '\u001b[m'
-const Inverse = '\u001B[7m'
+const Reset = '\x1B[m'
+const Inverse = '\x1B[7m'
 const ceil = '\u2582'
 const floor = Inverse + '\u2586' + Reset
 const left = Inverse + '\u258a' + Reset
@@ -307,21 +306,23 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
   return res
 }
 
-const printState = ({
-  move,
-  board,
-  figIndex,
-  rotateIndex,
-  color,
-  offsetX,
-  offsetY,
-  nextFigIndex,
-  nextFigColor,
-  score
-}) => {
-  const strBoard = board.map(row => row.join('')).join('')
-  console.log(move, strBoard, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score)
-}
+const stateToStr =
+  ({
+     move,
+     board,
+     figIndex,
+     rotateIndex,
+     color,
+     offsetX,
+     offsetY,
+     nextFigIndex,
+     nextFigColor,
+     score
+   }) => {
+    const strBoard = board.map(row => row.join('')).join('')
+    const res = `${move} ${strBoard} ${figIndex} ${rotateIndex} ${color} ${offsetX} ${offsetY} ${nextFigIndex} ${nextFigColor} ${score}`
+    return res
+  }
 
 const parseState = () => {
   const move = parseInt(process.argv[2])
@@ -347,10 +348,10 @@ const parseState = () => {
 // console.log(process.argv)
 if (process.argv[2] === '0init') {
   const state = init()
-  printState(state)
+  console.log(stateToStr(state))
 } else if (process.argv.length === 12) {
   const state = update(parseState())
-  printState(state)
+  console.log(stateToStr(state))
   console.log(render(state))
 } else {
   console.log(process.argv)
