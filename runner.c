@@ -107,6 +107,7 @@ void eval(unsigned frame) {
         fclose(logs);
         exit(0);
       }
+      fputs(path, logs);
       line = 1;
     } else {
       printf("%s", path);
