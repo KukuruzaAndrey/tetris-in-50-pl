@@ -16,5 +16,5 @@ js: runner
 
 test: $(TEST_FOLDER)/test.c
 	$(CC) $(CFLAGS) -o $(TEST_FOLDER)/test test/test.c
-	cd $(TEST_FOLDER) && ./test
+	echo 1 && cd $(TEST_FOLDER) && ./test
 
