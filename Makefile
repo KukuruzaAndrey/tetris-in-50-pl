@@ -18,6 +18,6 @@ js: runner
 	./runner javascript/core.js
 
 test: $(TEST_FOLDER)/test.c
-	$(CC) $(CFLAGS) -o $(TEST_FOLDER)/test test/test.c
-	echo 1 && cd $(TEST_FOLDER) && ./test
+	$(CC) $(CFLAGS) -o $(TEST_FOLDER)/test $(TEST_FOLDER)/test.c
+	cd $(TEST_FOLDER) && ./test
 

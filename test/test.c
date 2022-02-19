@@ -1,8 +1,10 @@
 #define _GNU_SOURCE
 
-#include "stdio.h"
-#include "string.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <errno.h>
 
 #define FRAME_BUFFER_SIZE 1000
 #define FRAME_LINES 22
@@ -12,10 +14,11 @@
 #define GREEN "\033[32m"
 #define RESET "\x1B[m"
 
+#define TEST_FOLDER "cases"
+
 FILE *corePipe;
 FILE *testFile;
-char *testFileName = "./tests.txt";
-char testCaseName[255];
+char testName[255];
 char actualNextStepResult[ARGS_SIZE];
 char expectedNextStepResult[ARGS_SIZE];
 char actualRenderResult[FRAME_BUFFER_SIZE];
@@ -89,17 +92,20 @@ int strcmpWithSkip(const char *s1, const char *s2) {
 
   }
 
-  return *(s1 + i) != *(s2 + j);
+  return !(*(s1 + i) == *(s2 + j));
 }
 
-void eval() {
+void run(const char *testFileName) {
+  // set default comparator
+  pstrcmp = strcmp;
+
   // open file with test cases
   testFile = checkError(fopen(testFileName, "r"), testFileName);
 
   // read name of test case
-  while (fgets(testCaseName, 255, testFile) != NULL) {
+  while (fgets(testName, 255, testFile) != NULL) {
     // remove trailing \n from name
-    testCaseName[strlen(testCaseName) - 1] = 0;
+    testName[strlen(testName) - 1] = 0;
 
     // read arguments for test
     fgets(coreInputs, ARGS_SIZE, testFile);
@@ -130,29 +136,28 @@ void eval() {
     }
 
     // if testcase with wildcards - use appropriate compare func 
-    if (testCaseName[0] == '$') {
+    if (testName[0] == '$') {
       pstrcmp = strcmpWithWildcard;
     }
     int result = pstrcmp(actualNextStepResult, expectedNextStepResult);
     if (result == 0) {
-//      printf("%s - %sPassed%s\n", testCaseName, GREEN, RESET);
+//      printf("%s - %sPassed%s\n", testName, GREEN, RESET);
     } else {
-      printf("%s - %sFailed%s\n", testCaseName, RED, RESET);
+      printf("%s - %sFailed%s\n", testName, RED, RESET);
       printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualNextStepResult),
              strlen(expectedNextStepResult));
       printf("Actual Result:\n%s\n", actualNextStepResult);
       printf("Expected Result:\n%s\n\n", expectedNextStepResult);
     }
-
-    if (testCaseName[0] == '$') {
+    if (testName[0] == '$') {
       pstrcmp = strcmpWithSkip;
     }
     result = pstrcmp(actualRenderResult, expectedRenderResult);
     if (result == 0) {
-      printf("%s - %sPassed%s\n", testCaseName, GREEN, RESET);
+      printf("%s - %sPassed%s\n", testName, GREEN, RESET);
 //      printf("%s\n", actualRenderResult);
     } else {
-      printf("%s - %sFailed%s\n", testCaseName, RED, RESET);
+      printf("%s - %sFailed%s\n", testName, RED, RESET);
       printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualRenderResult),
              strlen(expectedRenderResult));
       printf("Actual Result:\n%s\n", actualRenderResult);
@@ -167,8 +172,38 @@ void eval() {
   fclose(testFile);
 }
 
+void traverseAndExec(char *dirPath, void (*exec)(const char *)) {
+  // printf("entry %s\n", dirPath);
+  DIR *d = checkError(opendir(dirPath), dirPath);
+  struct dirent *entry;
+  errno = 0;
+  char pathToSubDir[1000];
+  while ((entry = readdir(d)) != NULL) {
+    snprintf(pathToSubDir, sizeof(pathToSubDir), "%s/%s", dirPath, entry->d_name);
+    switch (entry->d_type) {
+      case DT_REG:
+        // printf("exec %s\n", pathToSubDir);
+        run(pathToSubDir);
+        break;
+      case DT_DIR:
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+          traverseAndExec(pathToSubDir, exec);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (errno != 0) {
+    perror(dirPath);
+  }
+
+  closedir(d);
+//  printf("leave %s\n", dirPath);
+}
+
 int main(int argc, char **argv) {
-  pstrcmp = strcmp;
-  eval();
+  traverseAndExec(TEST_FOLDER, &run);
   return EXIT_SUCCESS;
 }
