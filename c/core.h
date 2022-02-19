@@ -88,7 +88,7 @@ const struct figure figures[FIG_COUNT] = {
       { .squares = {{0, 0}, {0, 1}, {1, 1}, {2, 1}}, .h = 2, .w = 3, .ofx = 0, .ofy = 0 },
       { .squares = {{0, 0}, {1, 0}, {0, 1}, {0, 2}}, .h = 3, .w = 2, .ofx = 1, .ofy = 0 },
     }
-  }, // Г
+  }, // J
   {
     .count = 2,
     .rotations = {

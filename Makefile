@@ -2,10 +2,13 @@ CFLAGS=-Wall -ggdb3 -std=c11
 .PHONY: test
 TEST_FOLDER = test
 
-all: runner
+all: runner one-runner
 
 runner: runner.c
 	$(CC) $(CFLAGS) -o runner runner.c
+
+one-runner: one-runner.c
+	$(CC) $(CFLAGS) -o one-runner one-runner.c
 
 c: runner c/core.c
 	$(CC) $(CFLAGS) -o c/core c/core.c
