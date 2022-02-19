@@ -1,6 +1,7 @@
 CFLAGS=-Wall -ggdb3 -std=c11
 .PHONY: test
 TEST_FOLDER = test
+CASE_PATH = cases
 
 all: runner one-runner
 
@@ -19,5 +20,4 @@ js: runner
 
 test: $(TEST_FOLDER)/test.c
 	$(CC) $(CFLAGS) -o $(TEST_FOLDER)/test $(TEST_FOLDER)/test.c
-	cd $(TEST_FOLDER) && ./test
-
+	cd $(TEST_FOLDER) && ./test $(CASE_PATH)

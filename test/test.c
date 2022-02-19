@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #define FRAME_BUFFER_SIZE 1000
 #define FRAME_LINES 22
@@ -13,8 +14,6 @@
 #define RED "\033[31m"
 #define GREEN "\033[32m"
 #define RESET "\x1B[m"
-
-#define TEST_FOLDER "cases"
 
 FILE *corePipe;
 FILE *testFile;
@@ -203,7 +202,24 @@ void traverseAndExec(char *dirPath, void (*exec)(const char *)) {
 //  printf("leave %s\n", dirPath);
 }
 
+int isDirectory(const char *path) {
+  struct stat statbuf;
+  if (stat(path, &statbuf) != 0)
+    return 0;
+  return S_ISDIR(statbuf.st_mode);
+}
+
 int main(int argc, char **argv) {
-  traverseAndExec(TEST_FOLDER, &run);
+  if (argc < 2) {
+    printf("%s\n", "provide arguments");
+    return 1;
+  }
+
+  if (isDirectory(argv[1])) {
+    traverseAndExec(argv[1], &run);
+  } else {
+    run(argv[1]);
+  }
+  
   return EXIT_SUCCESS;
 }
