@@ -154,7 +154,7 @@ void run(const char *testFileName) {
     result = pstrcmp(actualRenderResult, expectedRenderResult);
     if (result == 0) {
       printf("%s - %sPassed%s\n", testName, GREEN, RESET);
-//      printf("%s\n", actualRenderResult);
+      printf("%s\n", actualRenderResult);
     } else {
       printf("%s - %sFailed%s\n", testName, RED, RESET);
       printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualRenderResult),

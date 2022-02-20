@@ -38,10 +38,10 @@ char arg[500] = "0init";
 char *cmd;
 
 
-void eval(unsigned frame) {
+void eval() {
   snprintf(cmdBuff, sizeof(cmdBuff), "%s %s", cmd, arg);
   fp = popen(cmdBuff, "r");
-  fprintf(logs, "%u\n", frame);
+  fprintf(logs, "%s\n", "\"I\" rotation 0 move left - in front of the wall");
   fputs(arg, logs);
 
   if (fp == NULL) {
@@ -88,6 +88,6 @@ int main(int argc, char **argv) {
 
 
   enableRawMode();
-  eval(0);
+  eval();
   return EXIT_SUCCESS;
 }
