@@ -1,5 +1,6 @@
 CFLAGS=-Wall -ggdb3 -std=c11
 .PHONY: test
+SRCS_FOLDER = srcs
 TEST_FOLDER = test
 CASE_PATH = cases
 
@@ -11,7 +12,7 @@ runner: runner.c
 one-runner: one-runner.c
 	$(CC) $(CFLAGS) -o one-runner one-runner.c
 
-c: runner c/core.c
+c: runner $(SRCS_FOLDER)/c
 	$(CC) $(CFLAGS) -o c/core c/core.c
 	runner c/core
 
