@@ -22,3 +22,7 @@ js: runner
 test: $(TEST_FOLDER)/test.c
 	$(CC) $(CFLAGS) -o $(TEST_FOLDER)/test $(TEST_FOLDER)/test.c
 	cd $(TEST_FOLDER) && ./test $(CASE_PATH)
+
+one: one-runner
+	> logs.txt
+	xargs -a ./one-cases.txt -L 1 ./one-runner ./srcs/javascript/core.js

@@ -13,6 +13,7 @@
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
+#define YELLOW "\033[33m"
 #define RESET "\x1B[m"
 
 FILE *corePipe;
@@ -23,7 +24,7 @@ char expectedNextStepResult[ARGS_SIZE];
 char actualRenderResult[FRAME_BUFFER_SIZE];
 char expectedRenderResult[FRAME_BUFFER_SIZE];
 char line[255];
-char *corePath = "../javascript/core.js";
+char *corePath = "../srcs/javascript/core.js";
 char coreInputs[ARGS_SIZE];
 char coreArgs[ARGS_SIZE + 30];
 char *bucket;
@@ -130,7 +131,7 @@ void run(const char *testFileName) {
     // read lines from case - expected result of render
     bucket = expectedRenderResult;
     for (int j = 0; j < FRAME_LINES; ++j) {
-      fgets(line, 255, testFile);
+      fgets(line, sizeof(line), testFile);
       bucket = stpcpy(bucket, line);
     }
 
@@ -161,13 +162,15 @@ void run(const char *testFileName) {
              strlen(expectedRenderResult));
       printf("Actual Result:\n%s\n", actualRenderResult);
       printf("Expected Result:\n%s\n\n", expectedRenderResult);
+      printf("%s%s%s\n", RED, "FAIL", RESET);
+      exit(0);
     }
 
     // read empty line
     fgets(line, 255, testFile);
+    fclose(corePipe);
   }
 
-  fclose(corePipe);
   fclose(testFile);
 }
 
@@ -181,7 +184,7 @@ void traverseAndExec(char *dirPath, void (*exec)(const char *)) {
     snprintf(pathToSubDir, sizeof(pathToSubDir), "%s/%s", dirPath, entry->d_name);
     switch (entry->d_type) {
       case DT_REG:
-        // printf("exec %s\n", pathToSubDir);
+//        printf("%s%s%s\n", YELLOW, pathToSubDir, RESET);
         run(pathToSubDir);
         break;
       case DT_DIR:
@@ -220,6 +223,6 @@ int main(int argc, char **argv) {
   } else {
     run(argv[1]);
   }
-  
+  printf("%s%s%s\n", GREEN, "SUCCESS", RESET);
   return EXIT_SUCCESS;
 }
