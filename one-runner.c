@@ -41,7 +41,6 @@ char *cmd;
 void eval() {
   snprintf(cmdBuff, sizeof(cmdBuff), "%s %s", cmd, arg);
   fp = popen(cmdBuff, "r");
-  fprintf(logs, "%s\n", "\"L\" rotation 3 move left - tunnel");
   fputs(arg, logs);
 
   if (fp == NULL) {
@@ -75,8 +74,15 @@ int main(int argc, char **argv) {
     exit(1);
   } else if (argc == 2) {
   } else if (argc == 12) {
+    
+    // skip run
+    if (argv[2][0] == '#') {
+      exit(0);
+    }
+    
+    // check board 
     if (strlen(argv[3]) != 200) {
-      printf("%s\n", "border arg must have 200 chars");
+      printf("%s\n", "board arg must have 200 chars");
       exit(1);
     }
     sprintf(arg, "%s %s %s %s %s %s %s %s %s %s\n", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8],

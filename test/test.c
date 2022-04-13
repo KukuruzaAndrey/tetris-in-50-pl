@@ -18,7 +18,6 @@
 
 FILE *corePipe;
 FILE *testFile;
-char testName[255];
 char actualNextStepResult[ARGS_SIZE];
 char expectedNextStepResult[ARGS_SIZE];
 char actualRenderResult[FRAME_BUFFER_SIZE];
@@ -96,19 +95,15 @@ int strcmpWithSkip(const char *s1, const char *s2) {
 }
 
 void run(const char *testFileName) {
+  const unsigned useWildcard = strchr(testFileName, '$') != NULL;
   // set default comparator
   pstrcmp = strcmp;
 
   // open file with test cases
   testFile = checkError(fopen(testFileName, "r"), testFileName);
 
-  // read name of test case
-  while (fgets(testName, 255, testFile) != NULL) {
-    // remove trailing \n from name
-    testName[strlen(testName) - 1] = 0;
-
-    // read arguments for test
-    fgets(coreInputs, ARGS_SIZE, testFile);
+  // read arguments for test
+  while (fgets(coreInputs, ARGS_SIZE, testFile) != NULL) {
 
     // concatenate path for core and args
     snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
@@ -136,28 +131,28 @@ void run(const char *testFileName) {
     }
 
     // if testcase with wildcards - use appropriate compare func 
-    if (testName[0] == '$') {
+    if (useWildcard) {
       pstrcmp = strcmpWithWildcard;
     }
     int result = pstrcmp(actualNextStepResult, expectedNextStepResult);
     if (result == 0) {
-//      printf("%s - %sPassed%s\n", testName, GREEN, RESET);
+//      printf("%s - %sPassed%s\n", testFileName, GREEN, RESET);
     } else {
-      printf("%s - %sFailed%s\n", testName, RED, RESET);
+      printf("%s - %sFailed%s\n", testFileName, RED, RESET);
       printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualNextStepResult),
              strlen(expectedNextStepResult));
       printf("Actual Result:\n%s\n", actualNextStepResult);
       printf("Expected Result:\n%s\n\n", expectedNextStepResult);
     }
-    if (testName[0] == '$') {
+    if (useWildcard) {
       pstrcmp = strcmpWithSkip;
     }
     result = pstrcmp(actualRenderResult, expectedRenderResult);
     if (result == 0) {
-      printf("%s - %sPassed%s\n", testName, GREEN, RESET);
+      printf("%s - %sPassed%s\n", testFileName, GREEN, RESET);
       printf("%s\n", actualRenderResult);
     } else {
-      printf("%s - %sFailed%s\n", testName, RED, RESET);
+      printf("%s - %sFailed%s\n", testFileName, RED, RESET);
       printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualRenderResult),
              strlen(expectedRenderResult));
       printf("Actual Result:\n%s\n", actualRenderResult);
