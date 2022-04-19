@@ -17,7 +17,7 @@ c: runner $(SRCS_FOLDER)/c
 	runner c/core
 
 js: runner
-	./runner javascript/core.js
+	./runner $(SRCS_FOLDER)/javascript/core.js
 
 test: $(TEST_FOLDER)/test.c
 	$(CC) $(CFLAGS) -o $(TEST_FOLDER)/test $(TEST_FOLDER)/test.c

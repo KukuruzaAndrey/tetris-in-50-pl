@@ -53,6 +53,7 @@ void eval() {
     if (line == 0) {
       strncpy(arg, path, sizeof(arg));
       if (strcmp(path, "The End\n") == 0) {
+        printf("%s", "=== END ===\n");
         fputs("=== END ===\n", logs);
         fclose(logs);
         exit(0);
