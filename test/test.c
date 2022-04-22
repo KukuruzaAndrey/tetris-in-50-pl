@@ -181,7 +181,9 @@ void traverseAndExec(char *dirPath, void (*exec)(const char *)) {
     switch (entry->d_type) {
       case DT_REG:
 //        printf("%s%s%s\n", YELLOW, pathToSubDir, RESET);
-        run(pathToSubDir);
+        if (strcmp(entry->d_name, "readme.txt") != 0) {
+          run(pathToSubDir);
+        }
         break;
       case DT_DIR:
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {

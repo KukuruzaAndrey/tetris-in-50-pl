@@ -5,3 +5,5 @@ logs.txt
 runner
 test/test
 one-runner
+
+test/cases/04_move-down/*
