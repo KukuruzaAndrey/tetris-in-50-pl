@@ -143,6 +143,7 @@ void run(const char *testFileName) {
              strlen(expectedNextStepResult));
       printf("Actual Result:\n%s\n", actualNextStepResult);
       printf("Expected Result:\n%s\n\n", expectedNextStepResult);
+      exit(0);
     }
     if (useWildcard) {
       pstrcmp = strcmpWithSkip;
