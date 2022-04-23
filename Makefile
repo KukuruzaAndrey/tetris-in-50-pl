@@ -6,11 +6,11 @@ CASE_PATH = cases
 
 all: runner one-runner
 
-runner: runner.c
-	$(CC) $(CFLAGS) -o runner runner.c
+runner: runner.c utils.c
+	$(CC) $(CFLAGS) -o runner runner.c utils.c
 
-one-runner: one-runner.c
-	$(CC) $(CFLAGS) -o one-runner one-runner.c
+one-runner: one-runner.c utils.c
+	$(CC) $(CFLAGS) -o one-runner one-runner.c utils.c
 
 c: runner $(SRCS_FOLDER)/c
 	$(CC) $(CFLAGS) -o c/core c/core.c
@@ -19,8 +19,8 @@ c: runner $(SRCS_FOLDER)/c
 js: runner
 	./runner $(SRCS_FOLDER)/javascript/core.js
 
-test: $(TEST_FOLDER)/test.c
-	$(CC) $(CFLAGS) -o $(TEST_FOLDER)/test $(TEST_FOLDER)/test.c
+test: $(TEST_FOLDER)/test.c utils.c
+	$(CC) $(CFLAGS) -o $(TEST_FOLDER)/test $(TEST_FOLDER)/test.c utils.c
 	
 	# generate tests for move down from tick tests (results are the same, only command is diffirent)
 	rm -rf $(TEST_FOLDER)/$(CASE_PATH)/04_move-down/[!readme.txt]*

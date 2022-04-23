@@ -1,0 +1,1 @@
+void *checkError(const void *ptr, const char *description);

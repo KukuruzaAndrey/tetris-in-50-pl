@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include "../utils.h"
 
 #define FRAME_BUFFER_SIZE 1000
 #define FRAME_LINES 22
@@ -16,28 +17,12 @@
 #define YELLOW "\033[33m"
 #define RESET "\x1B[m"
 
-FILE *corePipe;
-FILE *testFile;
-char actualNextStepResult[ARGS_SIZE];
-char expectedNextStepResult[ARGS_SIZE];
-char actualRenderResult[FRAME_BUFFER_SIZE];
-char expectedRenderResult[FRAME_BUFFER_SIZE];
-char line[255];
 char *corePath = "../srcs/javascript/core.js";
 char coreInputs[ARGS_SIZE];
 char coreArgs[ARGS_SIZE + 30];
 char *bucket;
 
 int (*pstrcmp)(const char *, const char *);
-
-void *checkError(const void *ptr, const char *description) {
-  if (ptr == NULL) {
-    perror(description);
-    exit(1);
-  }
-
-  return (void *) ptr;
-}
 
 void compareResults(const char *actual, const char *expected, const char *caseName) {
   int result = strcmp(actual, expected);
@@ -95,6 +80,14 @@ int strcmpWithSkip(const char *s1, const char *s2) {
 }
 
 void run(const char *testFileName) {
+  FILE *corePipe;
+  FILE *testFile;
+  char actualNextStepResult[ARGS_SIZE];
+  char expectedNextStepResult[ARGS_SIZE];
+  char actualRenderResult[FRAME_BUFFER_SIZE];
+  char expectedRenderResult[FRAME_BUFFER_SIZE];
+  char line[255];
+
   const unsigned useWildcard = strchr(testFileName, '$') != NULL;
   // set default comparator
   pstrcmp = strcmp;

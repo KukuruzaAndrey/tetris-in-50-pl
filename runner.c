@@ -9,10 +9,14 @@
 #include <termios.h>
 #include <bits/types/struct_timeval.h>
 #include <sys/select.h>
+#include "utils.h"
 
 #define FRAME_TIME_MS (400)
 #define FRAME_TIME_NS (FRAME_TIME_MS * 1000 * 1000)
 #define CTRL_KEY(k) ((k) & 0x1f)
+#define INPUT_SIZE 500
+
+struct termios original;
 
 static uint32_t get_nanos(void) {
   struct timespec ts;
@@ -28,8 +32,6 @@ int8_t kbhit() {
   return select(1, &fds, NULL, NULL, &tv) > 0;
 }
 
-struct termios original;
-
 void disableRawMode() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
 }
@@ -44,14 +46,9 @@ void enableRawMode() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
-FILE *fp;
 FILE *logs;
-char path[1035];
-char cmdBuff[1035];
-char arg[500] = "0init";
-char *cmd;
 
-void editorProcessKeypress(char *arg) {
+char processKeypress() {
   char c, n;
   read(STDIN_FILENO, &c, sizeof(c));
   switch (c) {
@@ -63,45 +60,40 @@ void editorProcessKeypress(char *arg) {
       read(STDIN_FILENO, &n, 1);
       if (n == '[') {
         read(STDIN_FILENO, &n, 1);
-//                 tick: 0, left: 1, right: 2, down: 3, rotateClockwise: 4, rotateCounterClockwise: 5,
+        // tick: 0, left: 1, right: 2, down: 3, rotateClockwise: 4, rotateCounterClockwise: 5
         switch (n) {
           case 'B':
-            arg[0] = '3';
-            break;
+            return '3';
           case 'C':
-            arg[0] = '2';
-            break;
+            return '2';
           case 'D':
-            arg[0] = '1';
-            break;
+            return '1';
         }
       }
       break;
     case 'z':
-      arg[0] = '4';
-      break;
+      return '4';
     case 'x':
-      arg[0] = '5';
-      break;
-
+      return '5';
+    default:
+      return 0;
   }
+  return 0;
 }
 
-void eval(unsigned frame) {
-  snprintf(cmdBuff, sizeof(cmdBuff), "%s %s", cmd, arg);
-  fp = popen(cmdBuff, "r");
-  fprintf(logs, "%u\n", frame);
-  fputs(arg, logs);
+void eval(const unsigned frame, const char *corePath, char *coreInputs) {
+  char coreArgs[1035];
+  char path[1035];
 
-  if (fp == NULL) {
-    printf("%s", cmdBuff);
-    perror("a");
-    exit(1);
-  }
+  snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
+  FILE *fp = checkError(popen(coreArgs, "r"), coreArgs);
+  fprintf(logs, "%u frame\n", frame);
+  fputs(coreInputs, logs);
+
   unsigned line = 0;
   while (fgets(path, sizeof(path), fp) != NULL) {
     if (line == 0) {
-      strncpy(arg, path, sizeof(arg));
+      strncpy(coreInputs, path, INPUT_SIZE);
       if (strcmp(path, "The End\n") == 0) {
         fputs("=== END ===\n", logs);
         fclose(logs);
@@ -118,46 +110,61 @@ void eval(unsigned frame) {
   fclose(fp);
 }
 
-int main(int argc, char **argv) {
-  if (argc < 2) {
-    printf("%s\n", "provide arguments");
-    exit(1);
-  } else if (argc == 2) {
+int validateInputs(int argc, char **argv) {
+  if (argc == 2) {
   } else if (argc == 12) {
     if (strlen(argv[3]) != 200) {
       printf("%s\n", "border arg must have 200 chars");
-      exit(1);
+      return 1;
     }
-    sprintf(arg, "%s %s %s %s %s %s %s %s %s %s\n", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8],
-            argv[9], argv[10], argv[11]);
-//    printf("\n--%s--\n", arg);
   } else {
     printf("%s\n", "incorrect number of arguments");
+    return 1;
+  }
+  return 0;
+}
+
+int main(int argc, char **argv) {
+  if (validateInputs(argc, argv) > 0) {
     exit(1);
   }
 
-  cmd = argv[1];
-  logs = fopen("logs.txt", "a+");
+  char *corePath = argv[1];
+  char coreInputs[INPUT_SIZE] = "0init";
+  if (argc == 12) {
+    sprintf(coreInputs, "%s %s %s %s %s %s %s %s %s %s\n", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7],
+            argv[8], argv[9], argv[10], argv[11]);
+  }
+
+  logs = checkError(fopen("logs.txt", "a+"), "logs.txt");
 
 
   enableRawMode();
   uint32_t nanos;
-  uint32_t last_nanos;
+  uint32_t prev_nanos;
   nanos = get_nanos();
-  last_nanos = nanos;
+  prev_nanos = nanos;
   unsigned frame = 0;
+  char keyPressed = 0;
+  // if we dont provide init state, first arg is 0init
+  if (!strcmp(coreInputs, "0init")) {
+    eval(frame, corePath, coreInputs);
+    frame++;
+  }
   while (1) {
     nanos = get_nanos();
-    if (nanos - last_nanos > FRAME_TIME_NS) {
-      arg[0] = '0';
-      eval(frame);
-      last_nanos = nanos;
-      frame++;
-    }
     if (kbhit()) {
-      editorProcessKeypress(arg);
-      eval(frame);
+      keyPressed = processKeypress();
+    }
+    if (nanos - prev_nanos > FRAME_TIME_NS) {
+      prev_nanos = nanos;
+      keyPressed = '0';
+    }
+    if (keyPressed) {
+      coreInputs[0] = keyPressed;
+      eval(frame, corePath, coreInputs);
       frame++;
+      keyPressed = 0;
     }
   }
   return EXIT_SUCCESS;
