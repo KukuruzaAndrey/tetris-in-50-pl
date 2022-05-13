@@ -16,6 +16,8 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define INPUT_SIZE 500
 
+#define INIT_STATE "INIT_STATE\n"
+
 struct termios original;
 
 static uint32_t get_nanos(void) {
@@ -83,31 +85,35 @@ char processKeypress() {
 
 void eval(const unsigned frame, const char *corePath, char *coreInputs) {
   char coreArgs[1035];
-  char path[1035];
+  char resLineBuff[1035];
 
+  // Concatenate path-to-core and inputs aka tetris state
   snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
-  FILE *fp = checkError(popen(coreArgs, "r"), coreArgs);
+  
+  // Open pipe with core
+  FILE *core = checkError(popen(coreArgs, "r"), coreArgs);
   fprintf(logs, "%u frame\n", frame);
-  fputs(coreInputs, logs);
+  fprintf(logs, "%s", coreInputs);
 
   unsigned line = 0;
-  while (fgets(path, sizeof(path), fp) != NULL) {
+  while (fgets(resLineBuff, sizeof(resLineBuff), core) != NULL) {
     if (line == 0) {
-      strncpy(coreInputs, path, INPUT_SIZE);
-      if (strcmp(path, "The End\n") == 0) {
-        fputs("=== END ===\n", logs);
+      strncpy(coreInputs, resLineBuff, INPUT_SIZE);
+      if (strcmp(resLineBuff, "Game over!\n") == 0) {
+        fputs("=== Game over! ===\n", logs);
+        printf("%s\n", "Game over!");
         fclose(logs);
         exit(0);
       }
-      fputs(path, logs);
+      fputs(resLineBuff, logs);
       line = 1;
     } else {
-      printf("%s", path);
-      fputs(path, logs);
+      printf("%s", resLineBuff);
+      fputs(resLineBuff, logs);
     }
   }
   fputs("\n", logs);
-  fclose(fp);
+  fclose(core);
 }
 
 int validateInputs(int argc, char **argv) {
@@ -130,7 +136,7 @@ int main(int argc, char **argv) {
   }
 
   char *corePath = argv[1];
-  char coreInputs[INPUT_SIZE] = "0init";
+  char coreInputs[INPUT_SIZE] = INIT_STATE;
   if (argc == 12) {
     sprintf(coreInputs, "%s %s %s %s %s %s %s %s %s %s\n", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7],
             argv[8], argv[9], argv[10], argv[11]);
@@ -146,8 +152,8 @@ int main(int argc, char **argv) {
   prev_nanos = nanos;
   unsigned frame = 0;
   char keyPressed = 0;
-  // if we dont provide init state, first arg is 0init
-  if (!strcmp(coreInputs, "0init")) {
+  // if we dont provide init state, first arg is INIT_STATE
+  if (!strcmp(coreInputs, INIT_STATE)) {
     eval(frame, corePath, coreInputs);
     frame++;
   }

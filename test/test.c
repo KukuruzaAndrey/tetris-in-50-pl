@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include "../utils.h"
 
-#define FRAME_BUFFER_SIZE 1000
+#define FRAME_BUFFER_SIZE 3000
 #define FRAME_LINES 22
 #define ARGS_SIZE 230
 

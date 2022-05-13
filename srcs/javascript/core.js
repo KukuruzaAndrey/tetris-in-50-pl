@@ -17,39 +17,39 @@ const moves = {
   tick: 0, left: 1, right: 2, down: 3, rotateClockwise: 4, rotateCounterClockwise: 5,
 }
 const figures = [
-  [
+  [ // I
     { squares: [[0, 0], [1, 0], [2, 0], [3, 0]], h: 1, w: 4, ofx: 0, ofy: 2 },
     { squares: [[0, 0], [0, 1], [0, 2], [0, 3]], h: 4, w: 1, ofx: 2, ofy: 0 },
-  ], // I
-  [
+  ],
+  [ // L
     { squares: [[0, 0], [1, 0], [2, 0], [0, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
     { squares: [[0, 0], [1, 0], [1, 1], [1, 2]], h: 3, w: 2, ofx: 0, ofy: 0 },
     { squares: [[0, 1], [1, 1], [2, 1], [2, 0]], h: 2, w: 3, ofx: 0, ofy: 0 },
     { squares: [[0, 0], [0, 1], [0, 2], [1, 2]], h: 3, w: 2, ofx: 1, ofy: 0 },
-  ], // L
-  [
+  ],
+  [ // J
     { squares: [[0, 0], [1, 0], [2, 0], [2, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
     { squares: [[1, 0], [1, 1], [1, 2], [0, 2]], h: 3, w: 2, ofx: 0, ofy: 0 },
     { squares: [[0, 0], [0, 1], [1, 1], [2, 1]], h: 2, w: 3, ofx: 0, ofy: 0 },
     { squares: [[0, 0], [1, 0], [0, 1], [0, 2]], h: 3, w: 2, ofx: 1, ofy: 0 },
-  ], // J
-  [
+  ],
+  [ // S
     { squares: [[1, 0], [2, 0], [0, 1], [1, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
     { squares: [[0, 0], [0, 1], [1, 1], [1, 2]], h: 3, w: 2, ofx: 1, ofy: 0 },
-  ], // S
-  [
+  ],
+  [ // Z
     { squares: [[0, 0], [1, 0], [1, 1], [2, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
     { squares: [[0, 1], [1, 0], [1, 1], [0, 2]], h: 3, w: 2, ofx: 1, ofy: 0 },
-  ], // Z
-  [
+  ],
+  [ // O
     { squares: [[0, 0], [0, 1], [1, 1], [1, 0]], h: 2, w: 2, ofx: 0, ofy: 0 },
-  ], // O
-  [
+  ],
+  [ // T
     { squares: [[0, 0], [1, 0], [2, 0], [1, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
     { squares: [[1, 0], [0, 1], [1, 1], [1, 2]], h: 3, w: 2, ofx: 0, ofy: 0 },
     { squares: [[1, 0], [0, 1], [1, 1], [2, 1]], h: 2, w: 3, ofx: 0, ofy: 0 },
     { squares: [[0, 0], [0, 1], [0, 2], [1, 1]], h: 3, w: 2, ofx: 1, ofy: 0 },
-  ]  // T
+  ]
 ]
 
 const getRandomIntInclusive = (min, max) => {
@@ -94,7 +94,7 @@ const init = () => {
   const rotateIndex = 0
   const color = getRandomIntInclusive(1, backColors.length - 1)
   const offsetX = figIndex === 0 ? 3 : 4
-  const offsetY = -1 * figures[figIndex][rotateIndex].ofy - 1 // ???
+  const offsetY = -1 * figures[figIndex][rotateIndex].ofy // ???
   const nextFigIndex = getRandomIntInclusive(0, figures.length - 1)
   const nextFigColor = getRandomIntInclusive(1, backColors.length - 1)
   const score = 0
@@ -129,7 +129,7 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     case moves.rotateClockwise: {
       const newRotIndex = rotateIndex === figures[figIndex].length - 1 ? 0 : rotateIndex + 1
       const rotateFigCoords = getFigCoords({ figIndex, rotateIndex: newRotIndex, offsetX, offsetY })
-      if (rotateFigCoords.every(([x, y]) => x >= 0 && x < boardW && board[y][x] === 0)) {
+      if (rotateFigCoords.every(([x, y]) => x >= 0 && x < boardW && y < boardH && board[y][x] === 0)) {
         newPos.rotateIndex = newRotIndex
       }
       break
@@ -137,7 +137,7 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     case moves.rotateCounterClockwise: {
       const newRotIndex = rotateIndex === 0 ? figures[figIndex].length - 1 : rotateIndex - 1
       const rotateFigCoords = getFigCoords({ figIndex, rotateIndex: newRotIndex, offsetX, offsetY })
-      if (rotateFigCoords.every(([x, y]) => x >= 0 && x < boardW && board[y][x] === 0)) {
+      if (rotateFigCoords.every(([x, y]) => x >= 0 && x < boardW && y < boardH && board[y][x] === 0)) {
         newPos.rotateIndex = newRotIndex
       }
       break
@@ -184,7 +184,7 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     if (newCoords.some((([x, y]) => board[y][x] !== 0))) {
       // console.log(newCoords)
       // console.log(newCoords)
-      console.log('The End')
+      console.log('Game over!')
       process.exit()
     }
 
@@ -346,9 +346,10 @@ const parseState = () => {
 // console.log(process.argv.length)
 // console.log(process.argv.length)
 // console.log(process.argv)
-if (process.argv[2] === '0init') {
+if (process.argv[2] === 'INIT_STATE') {
   const state = init()
   console.log(stateToStr(state))
+  console.log(render(state))
 } else if (process.argv.length === 12) {
   const state = update(parseState())
   console.log(stateToStr(state))

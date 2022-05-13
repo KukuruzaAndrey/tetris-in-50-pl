@@ -40,6 +40,7 @@ char *cmd;
 
 void eval() {
   snprintf(cmdBuff, sizeof(cmdBuff), "%s %s", cmd, arg);
+  // printf("%s\n", cmdBuff);
   fp = popen(cmdBuff, "r");
   fputs(arg, logs);
 
@@ -48,22 +49,15 @@ void eval() {
     perror("a");
     exit(1);
   }
-  unsigned line = 0;
   while (fgets(path, sizeof(path), fp) != NULL) {
-    if (line == 0) {
-      strncpy(arg, path, sizeof(arg));
-      if (strcmp(path, "The End\n") == 0) {
-        printf("%s", "=== END ===\n");
-        fputs("=== END ===\n", logs);
-        fclose(logs);
-        exit(0);
-      }
-      fputs(path, logs);
-      line = 1;
-    } else {
-      printf("%s", path);
-      fputs(path, logs);
+    if (strcmp(path, "The End\n") == 0) {
+      printf("%s", "=== END ===\n");
+      fputs("=== END ===\n", logs);
+      fclose(logs);
+      exit(0);
     }
+    printf("%s", path);
+    fputs(path, logs);
   }
   fputs("\n", logs);
   fclose(fp);
@@ -75,12 +69,12 @@ int main(int argc, char **argv) {
     exit(1);
   } else if (argc == 2) {
   } else if (argc == 12) {
-    
+
     // skip run
     if (argv[2][0] == '#') {
       exit(0);
     }
-    
+
     // check board 
     if (strlen(argv[3]) != 200) {
       printf("%s\n", "board arg must have 200 chars");
