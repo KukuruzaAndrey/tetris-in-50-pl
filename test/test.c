@@ -173,7 +173,7 @@ void traverseAndExec(char *dirPath, void (*exec)(const char *)) {
     snprintf(pathToSubDir, sizeof(pathToSubDir), "%s/%s", dirPath, entry->d_name);
     switch (entry->d_type) {
       case DT_REG:
-//        printf("%s%s%s\n", YELLOW, pathToSubDir, RESET);
+      // printf("%s%s%s\n", YELLOW, pathToSubDir, RESET);
         if (strcmp(entry->d_name, "readme.txt") != 0) {
           run(pathToSubDir);
         }
