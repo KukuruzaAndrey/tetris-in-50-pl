@@ -33,11 +33,26 @@ test: $(TEST_DIR)/test.c utils.c
 	cp -r $(TEST_DIR)/$(CASE_DIR)/01_tick/* $(TEST_DIR)/$(CASE_DIR)/04_move-down
 	# for all test files
 	# find lines with arguments; change first '0' to '3'; write changes in-place (echo do the trick)
-	for f in $$(find $(TEST_DIR)/$(CASE_DIR)/04_move-down -type f -not -name readme.txt); \
+	for f in $$(find $(TEST_DIR)/$(CASE_DIR)/04_move-down -type f); \
 	do \
 		echo "$$(awk '{if (((NR - 1) % 25 == 0) || ((NR - 2) % 25 == 0)) $$1=3; print $0}' $$f)" > $$f; \
 	done
 	
+	## generate tests for rotate counter-clockwise from rotate clockwise tests 
+	# for figures that have two or one rotations (I, S, Z, O) (results are the same, only command is diffirent)
+	for f in 0_I 3_S 4_Z 5_O; \
+	do \
+	  	cp -r $(TEST_DIR)/$(CASE_DIR)/05_rotate-clockwise/$$f $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise; \
+	done
+	# for all test files
+	# find lines with arguments; change first '4' to '5'; write changes in-place (echo do the trick)
+	for d in 0_I 3_S 4_Z 5_O; \
+	do \
+		for f in $$(find $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise/$$d -type f); \
+		do \
+			echo "$$(awk '{if (((NR - 1) % 25 == 0) || ((NR - 2) % 25 == 0)) $$1=5; print $0}' $$f)" > $$f; \
+		done \
+	done
 	cd $(TEST_DIR) && ./test $(CASE_DIR)
 
 one: one-runner
@@ -49,9 +64,13 @@ clean:
 	rm -f one-runner
 	rm -f ./test/test
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/04_move-down/[!readme.txt]*
+	rm -rf $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise/0_I
+	rm -rf $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise/3_S
+	rm -rf $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise/4_Z
+	rm -rf $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise/5_0
 
-# check_test: search in test folder tests that above start position - dont need!
 check_test:
+	# search in test folder for tests that above start position - dont need!
 	for f in $$(find $(TEST_DIR)/$(CASE_DIR) -type f -not -name readme.txt); \
     do awk -f $(TEST_DIR)/check_test.awk $$f; \
     done

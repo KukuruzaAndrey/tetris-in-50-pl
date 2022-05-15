@@ -6,4 +6,9 @@ runner
 test/test
 one-runner
 
-test/cases/04_move-down/*
+# automaticaly generated tests
+test/cases/04_move-down/
+test/cases/06_rotate-counter-clockwise/0_I/
+test/cases/06_rotate-counter-clockwise/3_S/
+test/cases/06_rotate-counter-clockwise/4_Z/
+test/cases/06_rotate-counter-clockwise/5_O/
