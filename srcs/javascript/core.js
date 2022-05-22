@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-
+const isTest = false
+let isNewFigure = false
 const backColors = [
   '', // for empty
   '\033[41m', // BackgroundRed
@@ -149,6 +150,7 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
 
   // check is new position is overlap or on floor
   if (newCoords.some((([x, y]) => (y === boardH) || board[y][x] !== 0))) {
+    isNewFigure = true
     // paint piece back
     for (const [x, y] of oldCoords) {
       board[y][x] = color
@@ -158,7 +160,7 @@ const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     const boardWithoutFillLines = board.filter(line => line.some(c => c === 0))
     if (boardWithoutFillLines.length < boardH) {
       // update score
-      score += scores[boardH - boardWithoutFillLines.length]
+      score += scores[boardH - boardWithoutFillLines.length - 1]
 
       // add new empty lines
       const newLines = []
@@ -235,14 +237,19 @@ const renderNextPiece = (figIndex, color) => {
 
   for (let y = 0; y < h; y++) {
     res += left
-    for (let x = 0; x < w; x++) {
-      if (coords.some(([xc, yc]) => xc === x && yc === y)) {
-        res += backColors[color] + ' ' + Reset
-      } else {
-        res += ' '
-      }
+    if (isTest && isNewFigure && (y == 2 || y == 3)) {
+        res += '$'
+    } else {
+        for (let x = 0; x < w; x++) {
+              if (coords.some(([xc, yc]) => xc === x && yc === y)) {
+                res += backColors[color] + ' ' + Reset
+              } else {
+                res += ' '
+              }
+            }
+            res += right
+            
     }
-    res += right
     resArr.push(res)
     res = ''
   }
@@ -352,8 +359,14 @@ if (process.argv[2] === 'INIT_STATE') {
   console.log(render(state))
 } else if (process.argv.length === 12) {
   const state = update(parseState())
+  const newState = stateToStr(state)
+  const newRender = render(state)
+  if (isTest && isNewFigure) {
+        state.nextFigIndex = '?'
+        state.nextFigColor = '?'
+    }
   console.log(stateToStr(state))
-  console.log(render(state))
+  console.log(newRender)
 } else {
   console.log(process.argv)
   throw Error('incorrect arguments')

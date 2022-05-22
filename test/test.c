@@ -88,19 +88,25 @@ void run(const char *testFileName) {
   char expectedRenderResult[FRAME_BUFFER_SIZE];
   char line[255];
 
+  // $ in file name marks that this file contains test with not 100% predictably
+  // so we must use wildcards to skip not predictably parts
   const unsigned useWildcard = strchr(testFileName, '$') != NULL;
+  
+  const unsigned gameover = strchr(testFileName, '#') != NULL;
+  const unsigned frame_lines = gameover ? 1 : FRAME_LINES;
   // set default comparator
   pstrcmp = strcmp;
 
   // open file with test cases
   testFile = checkError(fopen(testFileName, "r"), testFileName);
-
+  unsigned file_line = 0;
   // read arguments for test
   while (fgets(coreInputs, ARGS_SIZE, testFile) != NULL) {
+    file_line += 1;
 
     // concatenate path for core and args
     snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
-
+    // printf("%s - args\n", coreArgs);
     // open core with args
     corePipe = checkError(popen(coreArgs, "r"), coreArgs);
 
@@ -118,7 +124,7 @@ void run(const char *testFileName) {
 
     // read lines from case - expected result of render
     bucket = expectedRenderResult;
-    for (int j = 0; j < FRAME_LINES; ++j) {
+    for (int j = 0; j < frame_lines; ++j) {
       fgets(line, sizeof(line), testFile);
       bucket = stpcpy(bucket, line);
     }
@@ -127,36 +133,45 @@ void run(const char *testFileName) {
     if (useWildcard) {
       pstrcmp = strcmpWithWildcard;
     }
+    // test next args
     int result = pstrcmp(actualNextStepResult, expectedNextStepResult);
     if (result == 0) {
-//      printf("%s - %sPassed%s\n", testFileName, GREEN, RESET);
+        printf("%s:%d - %sPassed%s\n", testFileName, file_line, GREEN, RESET);
     } else {
-      printf("%s - %sFailed%s\n", testFileName, RED, RESET);
+      printf("%s:%d - %sFailed%s\n", testFileName, file_line, RED, RESET);
       printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualNextStepResult),
              strlen(expectedNextStepResult));
       printf("Actual Result:\n%s\n", actualNextStepResult);
       printf("Expected Result:\n%s\n\n", expectedNextStepResult);
       exit(0);
     }
+
+    // if testcase with wildcards - use appropriate compare func
     if (useWildcard) {
       pstrcmp = strcmpWithSkip;
     }
-    result = pstrcmp(actualRenderResult, expectedRenderResult);
-    if (result == 0) {
-      printf("%s - %sPassed%s\n", testFileName, GREEN, RESET);
-      printf("%s\n", actualRenderResult);
-    } else {
-      printf("%s - %sFailed%s\n", testFileName, RED, RESET);
-      printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualRenderResult),
-             strlen(expectedRenderResult));
-      printf("Actual Result:\n%s\n", actualRenderResult);
-      printf("Expected Result:\n%s\n\n", expectedRenderResult);
-      printf("%s%s%s\n", RED, "FAIL", RESET);
-      exit(0);
+    // test render
+    if (!gameover) {
+      result = pstrcmp(actualRenderResult, expectedRenderResult);
+      if (result == 0) {
+        printf("%s:%d - %sPassed%s\n", testFileName, file_line, GREEN, RESET);
+        printf("%s\n", actualRenderResult);
+      } else {
+        printf("%s:%d - %sFailed%s\n", testFileName, file_line, RED, RESET);
+        printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualRenderResult),
+               strlen(expectedRenderResult));
+        printf("Actual Result:\n%s\n", actualRenderResult);
+        printf("Expected Result:\n%s\n\n", expectedRenderResult);
+        printf("%s%s%s\n", RED, "FAIL", RESET);
+        exit(0);
+      }
     }
-
+    
     // read empty line
     fgets(line, 255, testFile);
+
+    file_line += 2 + frame_lines;
+
     fclose(corePipe);
   }
 

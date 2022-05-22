@@ -83,7 +83,7 @@ char processKeypress() {
   return 0;
 }
 
-void eval(const unsigned frame, const char *corePath, char *coreInputs) {
+void eval(const char *corePath, char *coreInputs) {
   char coreArgs[1035];
   char resLineBuff[1035];
 
@@ -92,7 +92,6 @@ void eval(const unsigned frame, const char *corePath, char *coreInputs) {
   
   // Open pipe with core
   FILE *core = checkError(popen(coreArgs, "r"), coreArgs);
-  fprintf(logs, "%u frame\n", frame);
   fprintf(logs, "%s", coreInputs);
 
   unsigned line = 0;
@@ -120,7 +119,7 @@ int validateInputs(int argc, char **argv) {
   if (argc == 2) {
   } else if (argc == 12) {
     if (strlen(argv[3]) != 200) {
-      printf("%s\n", "border arg must have 200 chars");
+      printf("board arg must have 200 chars, but have %ld\n", strlen(argv[3]));
       return 1;
     }
   } else {
@@ -150,12 +149,10 @@ int main(int argc, char **argv) {
   uint32_t prev_nanos;
   nanos = get_nanos();
   prev_nanos = nanos;
-  unsigned frame = 0;
   char keyPressed = 0;
   // if we dont provide init state, first arg is INIT_STATE
   if (!strcmp(coreInputs, INIT_STATE)) {
-    eval(frame, corePath, coreInputs);
-    frame++;
+    eval(corePath, coreInputs);
   }
   while (1) {
     nanos = get_nanos();
@@ -168,8 +165,7 @@ int main(int argc, char **argv) {
     }
     if (keyPressed) {
       coreInputs[0] = keyPressed;
-      eval(frame, corePath, coreInputs);
-      frame++;
+      eval(corePath, coreInputs);
       keyPressed = 0;
     }
   }

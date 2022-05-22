@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
 
     // check board 
     if (strlen(argv[3]) != 200) {
-      printf("%s\n", "board arg must have 200 chars");
+      printf("board arg must have 200 chars, but have %ld\n", strlen(argv[3]));
       exit(1);
     }
     sprintf(arg, "%s %s %s %s %s %s %s %s %s %s\n", argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8],

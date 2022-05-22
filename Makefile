@@ -30,6 +30,7 @@ test: $(TEST_DIR)/test.c utils.c
 	
 	## generate tests for move down from tick tests (results are the same, only command is diffirent)
 	# copy all tick tests to down folder
+	mkdir -p $(TEST_DIR)/$(CASE_DIR)/04_move-down
 	cp -r $(TEST_DIR)/$(CASE_DIR)/01_tick/* $(TEST_DIR)/$(CASE_DIR)/04_move-down
 	# for all test files
 	# find lines with arguments; change first '0' to '3'; write changes in-place (echo do the trick)
@@ -63,7 +64,7 @@ clean:
 	rm -f $(RUNNER)
 	rm -f one-runner
 	rm -f ./test/test
-	rm -rf $(TEST_DIR)/$(CASE_DIR)/04_move-down/[!readme.txt]*
+	rm -rf $(TEST_DIR)/$(CASE_DIR)/04_move-down/
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise/0_I
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise/3_S
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/06_rotate-counter-clockwise/4_Z
@@ -71,6 +72,6 @@ clean:
 
 check_test:
 	# search in test folder for tests that above start position - dont need!
-	for f in $$(find $(TEST_DIR)/$(CASE_DIR) -type f -not -name readme.txt); \
-    do awk -f $(TEST_DIR)/check_test.awk $$f; \
-    done
+	for f in $$(find $(TEST_DIR)/$(CASE_DIR) -type f); \
+	do awk -f $(TEST_DIR)/check_test.awk $$f; \
+	done
