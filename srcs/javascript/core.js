@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const backColors = [
+const COLORS = [
   '', // for empty
   '\033[41m', // BackgroundRed
   '\033[42m', // BackgroundGreen
@@ -70,60 +70,36 @@ const init = () => {
   const board = createBoard(boardW, boardH)
   const figIndex = getRandomIntInclusive(0, figures.length - 1)
   const rotateIndex = 0
-  const color = getRandomIntInclusive(1, backColors.length - 1)
+  const color = getRandomIntInclusive(1, COLORS.length - 1)
   const offsetX = figIndex === 0 ? 3 : 4
   const offsetY = -1 * figures[figIndex][rotateIndex].ofy // ???
   const nextFigIndex = getRandomIntInclusive(0, figures.length - 1)
-  const nextFigColor = getRandomIntInclusive(1, backColors.length - 1)
+  const nextFigColor = getRandomIntInclusive(1, COLORS.length - 1)
   const score = 0
 
   return { move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }
 }
 
-const getFigCoords = ({ figIndex, rotateIndex, offsetX, offsetY, }) =>
+const getFigCoords = (figIndex, rotateIndex, offsetX, offsetY) =>
   figures[figIndex][rotateIndex].squares
     .map(([x, y]) => [x + offsetX + figures[figIndex][rotateIndex].ofx, y + offsetY + figures[figIndex][rotateIndex].ofy])
     .filter(([_, y]) => y >= 0) // don't care about segments above top of the screen
 
-const updateFigPos = ({ move, board, figIndex, rotateIndex, offsetX, offsetY, oldCoords }) => {
-  const newPos = { rotateIndex, offsetX, offsetY }
-  switch (move) {
-    case moves.tick:
-    case moves.down:
-      newPos.offsetY += 1
-      break
-    case moves.left:
-      if ((offsetX + figures[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0)) {
-        newPos.offsetX -= 1
-      }
-      break
-    case moves.right:
-      if ((offsetX + figures[figIndex][rotateIndex].w + figures[figIndex][rotateIndex].ofx < boardW) && oldCoords.every(([x, y]) => board[y][x + 1] === 0)) {
-        newPos.offsetX += 1
-      }
-      break
-    case moves.rotateClockwise: {
-      const newRotIndex = rotateIndex === figures[figIndex].length - 1 ? 0 : rotateIndex + 1
-      const rotateFigCoords = getFigCoords({ figIndex, rotateIndex: newRotIndex, offsetX, offsetY })
-      if (rotateFigCoords.every(([x, y]) => x >= 0 && x < boardW && y < boardH && board[y][x] === 0)) {
-        newPos.rotateIndex = newRotIndex
-      }
-      break
-    }
-    case moves.rotateCounterClockwise: {
-      const newRotIndex = rotateIndex === 0 ? figures[figIndex].length - 1 : rotateIndex - 1
-      const rotateFigCoords = getFigCoords({ figIndex, rotateIndex: newRotIndex, offsetX, offsetY })
-      if (rotateFigCoords.every(([x, y]) => x >= 0 && x < boardW && y < boardH && board[y][x] === 0)) {
-        newPos.rotateIndex = newRotIndex
-      }
-      break
-    }
-  }
-
-  return newPos
+const canMoveLeft = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+    const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+    return ((offsetX + figures[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0))     
+}
+const canMoveRight = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+    const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+    return ((offsetX + figures[figIndex][rotateIndex].w + figures[figIndex][rotateIndex].ofx < boardW) && oldCoords.every(([x, y]) => board[y][x + 1] === 0))     
+}
+const canRotate = (figIndex, newRotIndex, offsetX, offsetY) => {
+  const rotateFigCoords = getFigCoords(figIndex, newRotIndex, offsetX, offsetY)
+  return rotateFigCoords.every(([x, y]) => x >= 0 && x < boardW && y < boardH && board[y][x] === 0)
 }
 
-const removeFullLines = ({ board, score }) => {
+const removeFullLines = state => {
+   ({board, score} = state);
   const boardWithoutFillLines = board.filter(line => line.some(c => c === 0))
   if (boardWithoutFillLines.length < boardH) {
     // update score
@@ -137,58 +113,91 @@ const removeFullLines = ({ board, score }) => {
     boardWithoutFillLines.unshift(...newLines)
     board = boardWithoutFillLines
   }
-  return { board, score }
+  state.board = board
+  state.score = score
 }
 
-const createNewFig = ({ nextFigIndex, nextFigColor }) => ({
-  figIndex: nextFigIndex,
-  nextFigIndex: getRandomIntInclusive(0, figures.length - 1),
-  rotateIndex: 0,
-  offsetX: nextFigIndex === 0 ? 3 : 4,
-  offsetY: -1 * figures[nextFigIndex][0].ofy,
-  color: nextFigColor,
-  nextFigColor: getRandomIntInclusive(1, backColors.length - 1)
-})
-const update = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }) => {
-  // console.log({ figIndex, rotateIndex, offsetX, offsetY, })
-  const oldCoords = getFigCoords({ figIndex, rotateIndex, offsetX, offsetY, })
+const createNewFig = state => {
+  ({nextFigIndex, nextFigColor} = state);
+  state.figIndex = nextFigIndex
+  state.nextFigIndex = getRandomIntInclusive(0, figures.length - 1)
+  state.rotateIndex = 0
+  state.offsetX = nextFigIndex === 0 ? 3 : 4
+  state.offsetY = -1 * figures[nextFigIndex][0].ofy
+  state.color = nextFigColor
+  state.nextFigColor = getRandomIntInclusive(1, COLORS.length - 1)
+}
 
-  // update piece position
-  const newPos = updateFigPos({ move, board, figIndex, rotateIndex, offsetX, offsetY, oldCoords })
+const needNewFigure = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+    const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY + 1)
+    const isOverlap = coords.some((([x, y]) => (y === boardH) || board[y][x] !== 0))
+    return isOverlap
+}
 
-  // calculate new coordinates
-  const newCoords = getFigCoords({ figIndex, ...newPos })
-
-  // check is new position is overlap or on floor
-  if (newCoords.some((([x, y]) => (y === boardH) || board[y][x] !== 0))) {
-    // add piece to board
-    for (const [x, y] of oldCoords) {
-      board[y][x] = color
-    }
-
-    // remove full lines
-    ({ board, score } = removeFullLines({ board, score }));
-
-    // create new piece
-    ({ figIndex, nextFigIndex, rotateIndex, offsetX, offsetY, color, nextFigColor, } = createNewFig({
-      nextFigIndex,
-      nextFigColor
-    }));
-
-    const newCoords = getFigCoords({ figIndex, rotateIndex, offsetX, offsetY, })
-
-    // check end of game
+const checkEndGame = (state) => {
+    const newCoords = getFigCoords(state.figIndex, state.rotateIndex, state.offsetX, state.offsetY)
     if (newCoords.some((([x, y]) => board[y][x] !== 0))) {
-      // console.log(newCoords)
-      // console.log(newCoords)
-      console.log('Game over!')
-      process.exit()
+        console.log('Game over!')
+        process.exit()
     }
-  } else {
-    ({ rotateIndex, offsetX, offsetY } = newPos)
-  }
+}
+const update = (state) => {
+  ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score } = state)
+  // update piece position
+    switch (move) {
+      case moves.tick:
+      case moves.down:
+        
+          // check is new position is overlap or on floor
+          if (needNewFigure(state)) {
+            // add piece to board
+            const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+            for (const [x, y] of oldCoords) {
+              board[y][x] = color
+            }
+        
+            // remove full lines
+            removeFullLines(state)
+            // create new piece
+            createNewFig(state)
+        
+            checkEndGame(state)
+            
+            return state
+          }
+          state.offsetY += 1
+        return state
+      case moves.left:
+        if (canMoveLeft(state)) {
+            state.offsetX -= 1
+            return state
+        }
+        break
+      case moves.right:
+        if (canMoveRight(state)) {
+            state.offsetX += 1
+            return state
+        }
+        break
+      case moves.rotateClockwise: {
+        const newRotIndex = rotateIndex === figures[figIndex].length - 1 ? 0 : rotateIndex + 1
+        if (canRotate(figIndex, newRotIndex, offsetX, offsetY)) {
+            state.rotateIndex = newRotIndex
+            return state
+        }
+        break
+      }
+      case moves.rotateCounterClockwise: {
+        const newRotIndex = rotateIndex === 0 ? figures[figIndex].length - 1 : rotateIndex - 1
+        if (canRotate(figIndex, newRotIndex, offsetX, offsetY)) {
+            state.rotateIndex = newRotIndex
+            return state
+        }
+        break
+      }
+    }
 
-  return { move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }
+  return state
 }
 
 
@@ -205,9 +214,7 @@ const renderNextPiece = (figIndex, color) => {
   const h = 6
   const offsetX = figIndex === 5 ? 2 : 1
   const offsetY = figIndex === 5 ? 2 : 1
-  const coords = getFigCoords({
-    figIndex, rotateIndex: 0, offsetX, offsetY
-  })
+  const coords = getFigCoords(figIndex, 0, offsetX, offsetY)
 
   const resArr = []
   let res = ''
@@ -223,7 +230,7 @@ const renderNextPiece = (figIndex, color) => {
     res += left
     for (let x = 0; x < w; x++) {
       if (coords.some(([xc, yc]) => xc === x && yc === y)) {
-        res += backColors[color] + ' ' + Reset
+        res += COLORS[color] + ' ' + Reset
       } else {
         res += ' '
       }
@@ -245,7 +252,7 @@ const renderNextPiece = (figIndex, color) => {
 const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }) => {
 
   // add piece to board for simplifying render
-  const coords = getFigCoords({ figIndex, rotateIndex, offsetX, offsetY })
+  const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
   for (const [x, y] of coords) {
     board[y][x] = color
   }
@@ -261,7 +268,7 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     res += left
     for (let x = 0; x < boardW; x++) {
       if (board[y][x] !== 0) {
-        res += backColors[board[y][x]] + ' ' + Reset
+        res += COLORS[board[y][x]] + ' ' + Reset
       } else {
         res += (x % 2 === 0) ? ' ' : spacer
       }
