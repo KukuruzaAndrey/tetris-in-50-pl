@@ -10,11 +10,11 @@ const COLORS = [
   '\033[46m', // BackgroundCyan
   '\033[47m', // BackgroundWhite
 ]
-const boardW = 10
-const boardH = 20
-const scores = [10, 30, 60, 100]
+const BOARD_W = 10
+const BOARD_H = 20
+const SCORES = [10, 30, 60, 100]
 const moves = {
-  tick: 0, left: 1, right: 2, down: 3, rotateClockwise: 4, rotateCounterClockwise: 5,
+  down: 0, left: 1, right: 2, rotateClockwise: 3, rotateCounterClockwise: 4,
 }
 const figures = [
   [ // I
@@ -56,10 +56,10 @@ const getRandomIntInclusive = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-const createBoard = (boardW, boardH) => {
+const createBoard = (BOARD_W, BOARD_H) => {
   const board = []
-  for (let y = 0; y < boardH; y++) {
-    const row = Array(boardW).fill(0)
+  for (let y = 0; y < BOARD_H; y++) {
+    const row = Array(BOARD_W).fill(0)
     board.push(row)
   }
   return board
@@ -67,7 +67,7 @@ const createBoard = (boardW, boardH) => {
 
 const init = () => {
   const move = moves.tick
-  const board = createBoard(boardW, boardH)
+  const board = createBoard(BOARD_W, BOARD_H)
   const figIndex = getRandomIntInclusive(0, figures.length - 1)
   const rotateIndex = 0
   const color = getRandomIntInclusive(1, COLORS.length - 1)
@@ -87,28 +87,28 @@ const getFigCoords = (figIndex, rotateIndex, offsetX, offsetY) =>
 
 const canMoveLeft = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
     const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    return ((offsetX + figures[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0))     
+    return ((offsetX + figures[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0))
 }
 const canMoveRight = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
     const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    return ((offsetX + figures[figIndex][rotateIndex].w + figures[figIndex][rotateIndex].ofx < boardW) && oldCoords.every(([x, y]) => board[y][x + 1] === 0))     
+    return ((offsetX + figures[figIndex][rotateIndex].w + figures[figIndex][rotateIndex].ofx < BOARD_W) && oldCoords.every(([x, y]) => board[y][x + 1] === 0))     
 }
 const canRotate = (figIndex, newRotIndex, offsetX, offsetY) => {
   const rotateFigCoords = getFigCoords(figIndex, newRotIndex, offsetX, offsetY)
-  return rotateFigCoords.every(([x, y]) => x >= 0 && x < boardW && y < boardH && board[y][x] === 0)
+  return rotateFigCoords.every(([x, y]) => x >= 0 && x < BOARD_W && y < BOARD_H && board[y][x] === 0)
 }
 
 const removeFullLines = state => {
    ({board, score} = state);
   const boardWithoutFillLines = board.filter(line => line.some(c => c === 0))
-  if (boardWithoutFillLines.length < boardH) {
+  if (boardWithoutFillLines.length < BOARD_H) {
     // update score
-    score += scores[boardH - boardWithoutFillLines.length - 1]
+    score += SCORES[BOARD_H - boardWithoutFillLines.length - 1]
 
     // add new empty lines
     const newLines = []
-    for (let i = 0; i < boardH - boardWithoutFillLines.length; i++) {
-      newLines.push(Array(boardW).fill(0))
+    for (let i = 0; i < BOARD_H - boardWithoutFillLines.length; i++) {
+      newLines.push(Array(BOARD_W).fill(0))
     }
     boardWithoutFillLines.unshift(...newLines)
     board = boardWithoutFillLines
@@ -130,7 +130,7 @@ const createNewFig = state => {
 
 const needNewFigure = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
     const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY + 1)
-    const isOverlap = coords.some((([x, y]) => (y === boardH) || board[y][x] !== 0))
+    const isOverlap = coords.some((([x, y]) => (y === BOARD_H) || board[y][x] !== 0))
     return isOverlap
 }
 
@@ -145,7 +145,6 @@ const update = (state) => {
   ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score } = state)
   // update piece position
     switch (move) {
-      case moves.tick:
       case moves.down:
         
           // check is new position is overlap or on floor
@@ -259,14 +258,14 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
 
   const nP = renderNextPiece(nextFigIndex, nextFigColor)
   let res = ' '
-  for (let x = 0; x < boardW; x++) {
+  for (let x = 0; x < BOARD_W; x++) {
     res += ceil
   }
   res += ' \n'
 
-  for (let y = 0; y < boardH; y++) {
+  for (let y = 0; y < BOARD_H; y++) {
     res += left
-    for (let x = 0; x < boardW; x++) {
+    for (let x = 0; x < BOARD_W; x++) {
       if (board[y][x] !== 0) {
         res += COLORS[board[y][x]] + ' ' + Reset
       } else {
@@ -286,7 +285,7 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     res += '\n'
   }
   res += ' '
-  for (let x = 0; x < boardW; x++) {
+  for (let x = 0; x < BOARD_W; x++) {
     res += floor
   }
   res += ' '
@@ -319,8 +318,8 @@ const stateToStr =
 const parseState = () => {
   const move = parseInt(process.argv[2])
   const board = []
-  for (let i = 0; i < process.argv[3].length; i += boardW) {
-    board.push(process.argv[3].slice(i, i + boardW).split('').map(c => parseInt(c)))
+  for (let i = 0; i < process.argv[3].length; i += BOARD_W) {
+    board.push(process.argv[3].slice(i, i + BOARD_W).split('').map(c => parseInt(c)))
   }
   // console.log(board.length)
   // console.log(board)

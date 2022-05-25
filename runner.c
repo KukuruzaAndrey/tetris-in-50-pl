@@ -62,10 +62,10 @@ char processKeypress() {
       read(STDIN_FILENO, &n, 1);
       if (n == '[') {
         read(STDIN_FILENO, &n, 1);
-        // tick: 0, left: 1, right: 2, down: 3, rotateClockwise: 4, rotateCounterClockwise: 5
+        // down(tick): 0, left: 1, right: 2, rotateClockwise: 3, rotateCounterClockwise: 4
         switch (n) {
           case 'B':
-            return '3';
+            return '0';
           case 'C':
             return '2';
           case 'D':
@@ -74,9 +74,9 @@ char processKeypress() {
       }
       break;
     case 'z':
-      return '4';
+      return '3';
     case 'x':
-      return '5';
+      return '4';
     default:
       return 0;
   }
