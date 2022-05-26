@@ -27,6 +27,7 @@ js: $(RUNNER)
 
 test:
 	$(CC) $(CFLAGS) -o $(TEST_DIR)/test $(TEST_DIR)/test.c utils.c
+	$(CC) $(CFLAGS) -o $(TEST_DIR)/test_init $(TEST_DIR)/test_init.c utils.c
 	
 	## generate tests for rotate counter-clockwise from rotate clockwise tests 
 	# for figures that have two or one rotations (I, S, Z, O) (results are the same, only command is diffirent)
@@ -43,7 +44,7 @@ test:
 			echo "$$(awk '{if (((NR - 1) % 25 == 0) || ((NR - 2) % 25 == 0)) $$1=4; print $0}' $$f)" > $$f; \
 		done \
 	done
-	cd $(TEST_DIR) && ./test $(CASE_DIR)
+	cd $(TEST_DIR) && ./test_init ./initCases/er.txt &&./test $(CASE_DIR)
 
 one: one-runner
 	> logs.txt
@@ -53,6 +54,7 @@ clean:
 	rm -f $(RUNNER)
 	rm -f one-runner
 	rm -f ./test/test
+	rm -f ./test/test_init
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/0_I
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/3_S
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/4_Z

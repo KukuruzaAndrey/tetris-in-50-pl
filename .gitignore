@@ -4,6 +4,7 @@
 logs.txt
 runner
 test/test
+test/test_init
 one-runner
 
 # automaticaly generated tests

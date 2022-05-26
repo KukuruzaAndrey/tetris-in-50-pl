@@ -66,7 +66,7 @@ const createBoard = (BOARD_W, BOARD_H) => {
 }
 
 const init = () => {
-  const move = moves.tick
+  const move = moves.down
   const board = createBoard(BOARD_W, BOARD_H)
   const figIndex = getRandomIntInclusive(0, figures.length - 1)
   const rotateIndex = 0

@@ -91,7 +91,7 @@ void run(const char *testFileName) {
   // $ in file name marks that this file contains test with not 100% predictably
   // so we must use wildcards to skip not predictably parts
   const unsigned useWildcard = strchr(testFileName, '$') != NULL;
-  
+
   const unsigned gameover = strchr(testFileName, '#') != NULL;
   const unsigned frame_lines = gameover ? 1 : FRAME_LINES;
   // set default comparator
@@ -136,15 +136,15 @@ void run(const char *testFileName) {
     // test next args
     int result = pstrcmp(actualNextStepResult, expectedNextStepResult);
     if (result == 0) {
-        printf("%s:%d - %sPassed%s\n", testFileName, file_line, GREEN, RESET);
+      printf("%s:%d - %sPassed%s\n", testFileName, file_line, GREEN, RESET);
     } else {
       printf("%s:%d - %sFailed%s\n", testFileName, file_line, RED, RESET);
-      printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualNextStepResult),
+      printf("strlen(actualNextStepResult) - %lu   strlen(expectedNextStepResult) - %lu\n", strlen(actualNextStepResult),
              strlen(expectedNextStepResult));
       printf("Case:\n%s\n", coreInputs);
       printf("Actual Result:\n%s\n", actualNextStepResult);
       printf("Expected Result:\n%s\n\n", expectedNextStepResult);
-      exit(0);
+      exit(1);
     }
 
     // if testcase with wildcards - use appropriate compare func
@@ -164,10 +164,10 @@ void run(const char *testFileName) {
         printf("Actual Result:\n%s\n", actualRenderResult);
         printf("Expected Result:\n%s\n\n", expectedRenderResult);
         printf("%s%s%s\n", RED, "FAIL", RESET);
-        exit(0);
+        exit(1);
       }
     }
-    
+
     // read empty line
     fgets(line, 255, testFile);
 
@@ -189,10 +189,8 @@ void traverseAndExec(char *dirPath, void (*exec)(const char *)) {
     snprintf(pathToSubDir, sizeof(pathToSubDir), "%s/%s", dirPath, entry->d_name);
     switch (entry->d_type) {
       case DT_REG:
-      // printf("%s%s%s\n", YELLOW, pathToSubDir, RESET);
-        if (strcmp(entry->d_name, "readme.txt") != 0) {
-          run(pathToSubDir);
-        }
+        // printf("%s%s%s\n", YELLOW, pathToSubDir, RESET);
+        run(pathToSubDir);
         break;
       case DT_DIR:
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
