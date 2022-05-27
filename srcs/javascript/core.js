@@ -140,7 +140,7 @@ const needNewFigure = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
 
 const checkEndGame = (state) => {
     const newCoords = getFigCoords(state.figIndex, state.rotateIndex, state.offsetX, state.offsetY)
-    if (newCoords.some((([x, y]) => board[y][x] !== 0))) {
+    if (newCoords.some((([x, y]) => state.board[y][x] !== 0))) {
         console.log('Game over!')
         process.exit()
     }
@@ -150,25 +150,17 @@ const update = (state) => {
   // update piece position
     switch (move) {
       case MOVES.DOWN:
-        
-          // check is new position is overlap or on floor
-          if (needNewFigure(state)) {
-            // add piece to board
-            const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-            for (const [x, y] of oldCoords) {
-              board[y][x] = color
-            }
-        
-            // remove full lines
-            removeFullLines(state)
-            // create new piece
-            createNewFig(state)
-        
-            checkEndGame(state)
-            
-            return state
+        if (needNewFigure(state)) {
+          const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+          for (const [x, y] of oldCoords) {
+            board[y][x] = color
           }
-          state.offsetY += 1
+          removeFullLines(state)
+          createNewFig(state)
+          checkEndGame(state)
+          return state
+        }
+        state.offsetY += 1
         return state
       case MOVES.LEFT:
         if (canMoveLeft(state)) {
@@ -211,46 +203,8 @@ const FLOOR = INVERSE + '\u2586' + RESET
 const LEFT = INVERSE + '\u258a' + RESET
 const RIGHT = '\u258e'
 const SPACER = '.'
-
-const renderNextPiece = (figIndex, color) => {
-  const w = 6
-  const h = 6
-  const offsetX = figIndex === 5 ? 2 : 1
-  const offsetY = figIndex === 5 ? 2 : 1
-  const coords = getFigCoords(figIndex, 0, offsetX, offsetY)
-
-  const resArr = []
-  let res = ''
-  res += ' '
-  for (let x = 0; x < w; x++) {
-    res += CEIL
-  }
-  res += ' '
-  resArr.push(res)
-  res = ''
-
-  for (let y = 0; y < h; y++) {
-    res += LEFT
-    for (let x = 0; x < w; x++) {
-      if (coords.some(([xc, yc]) => xc === x && yc === y)) {
-        res += COLORS[color] + ' ' + RESET
-      } else {
-        res += ' '
-      }
-    }
-    res += RIGHT
-    resArr.push(res)
-    res = ''
-  }
-  res += ' '
-  for (let x = 0; x < w; x++) {
-    res += FLOOR
-  }
-  res += ' '
-  resArr.push(res)
-
-  return resArr
-}
+const NEXT_P_BOARD_W = 6
+const NEXT_P_BOARD_H = 6
 
 const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }) => {
 
@@ -260,40 +214,40 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     board[y][x] = color
   }
 
-  const nP = renderNextPiece(nextFigIndex, nextFigColor)
-  let res = ' '
-  for (let x = 0; x < BOARD_W; x++) {
-    res += CEIL
+  const renderLine = y => {
+    let line = ''
+     for (let x = 0; x < BOARD_W; x++) {
+       if (board[y][x] !== 0) {
+         line += COLORS[board[y][x]] + ' ' + RESET
+       } else {
+         line += (x % 2 === 0) ? ' ' : SPACER
+       }
+     }
+     return line
   }
-  res += ' \n'
-
-  for (let y = 0; y < BOARD_H; y++) {
-    res += LEFT
-    for (let x = 0; x < BOARD_W; x++) {
-      if (board[y][x] !== 0) {
-        res += COLORS[board[y][x]] + ' ' + RESET
-      } else {
-        res += (x % 2 === 0) ? ' ' : SPACER
+  const nextFigCoords = getFigCoords(nextFigIndex, 0, nextFigIndex === 5 ? 2 : 1, nextFigIndex === 5 ? 2 : 1) 
+  const renderNextPieceLine = y => {
+    if (y > NEXT_P_BOARD_H + 2) return ''
+    if (y === 0) return ' ' + String(score).padStart(6, '0')
+    if (y === 1) return ` ${CEIL.repeat(NEXT_P_BOARD_W)} `
+    if (y === NEXT_P_BOARD_H + 2) return ` ${FLOOR.repeat(NEXT_P_BOARD_W)} `
+    let line = ''
+    for (let x = 0; x < NEXT_P_BOARD_W; x++) {
+        if (nextFigCoords.some(([xc, yc]) => xc === x && yc === y - 2)) {
+          line += COLORS[nextFigColor] + ' ' + RESET
+        } else {
+          line += ' '
+        }
       }
-    }
-    res += RIGHT
-
-    if (y === 0) {
-      res += ' ' + String(score).padStart(6, '0')
-    }
-
-    if (y > 0 && y - 1 < nP.length) {
-      res += nP[y - 1]
-    }
-
-    res += '\n'
+    return LEFT + line + RIGHT
   }
-  res += ' '
-  for (let x = 0; x < BOARD_W; x++) {
-    res += FLOOR
+  
+  
+  let res = ` ${CEIL.repeat(BOARD_W)} \n`
+  for (let y = 0; y < BOARD_H; y++) {
+    res += LEFT + renderLine(y) + RIGHT + renderNextPieceLine(y) + '\n'
   }
-  res += ' '
-  // res += '\n'
+  res += ` ${FLOOR.repeat(BOARD_W)} `
 
   for (const [x, y] of coords) {
     board[y][x] = 0
@@ -325,8 +279,6 @@ const parseState = () => {
   for (let i = 0; i < process.argv[3].length; i += BOARD_W) {
     board.push(process.argv[3].slice(i, i + BOARD_W).split('').map(c => parseInt(c)))
   }
-  // console.log(board.length)
-  // console.log(board)
   const figIndex = parseInt(process.argv[4])
   const rotateIndex = parseInt(process.argv[5])
   const color = parseInt(process.argv[6])
@@ -335,18 +287,15 @@ const parseState = () => {
   const nextFigIndex = parseInt(process.argv[9])
   const nextFigColor = parseInt(process.argv[10])
   const score = parseInt(process.argv[11])
-  // console.log({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score })
   return { move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }
 }
-// console.log(process.argv.length)
-// console.log(process.argv.length)
-// console.log(process.argv)
-if (process.argv[2] === 'INIT_STATE') {
-  const state = init()
+
+if (process.argv.length === 12) {
+  const state = update(parseState())
   console.log(stateToStr(state))
   console.log(render(state))
-} else if (process.argv.length === 12) {
-  const state = update(parseState())
+} else if (process.argv[2] === 'INIT_STATE') {
+  const state = init()
   console.log(stateToStr(state))
   console.log(render(state))
 } else {
