@@ -1,15 +1,5 @@
 #!/usr/bin/env node
 
-const COLORS = [
-  '', // for empty
-  '\033[41m', // BackgroundRed
-  '\033[42m', // BackgroundGreen
-  '\033[43m', // BackgroundYellow
-  '\033[44m', // BackgroundBlue
-  '\033[45m', // BackgroundMagenta
-  '\033[46m', // BackgroundCyan
-  '\033[47m', // BackgroundWhite
-]
 const BOARD_W = 10
 const BOARD_H = 20
 const SCORES = [10, 30, 60, 100]
@@ -20,6 +10,18 @@ const MOVES = {
   ROTATE_CLOCKWISE: 3, 
   ROTATE_COUNTER_CLOCKWISE: 4,
 }
+
+const COLORS = [
+  '', // for empty
+  '\033[41m', // BackgroundRed
+  '\033[42m', // BackgroundGreen
+  '\033[43m', // BackgroundYellow
+  '\033[44m', // BackgroundBlue
+  '\033[45m', // BackgroundMagenta
+  '\033[46m', // BackgroundCyan
+  '\033[47m', // BackgroundWhite
+]
+
 const FIGURES = [
   [ // I
     { squares: [[0, 0], [1, 0], [2, 0], [3, 0]], h: 1, w: 4, ofx: 0, ofy: 2 },
@@ -89,17 +91,10 @@ const getFigCoords = (figIndex, rotateIndex, offsetX, offsetY) =>
     .map(([x, y]) => [x + offsetX + FIGURES[figIndex][rotateIndex].ofx, y + offsetY + FIGURES[figIndex][rotateIndex].ofy])
     .filter(([_, y]) => y >= 0) // don't care about segments above top of the screen
 
-const canMoveLeft = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
-    const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    return ((offsetX + FIGURES[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0))
-}
-const canMoveRight = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
-    const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    return ((offsetX + FIGURES[figIndex][rotateIndex].w + FIGURES[figIndex][rotateIndex].ofx < BOARD_W) && oldCoords.every(([x, y]) => board[y][x + 1] === 0))     
-}
-const canRotate = (figIndex, newRotIndex, offsetX, offsetY) => {
-  const rotateFigCoords = getFigCoords(figIndex, newRotIndex, offsetX, offsetY)
-  return rotateFigCoords.every(([x, y]) => x >= 0 && x < BOARD_W && y < BOARD_H && board[y][x] === 0)
+const needNewFigure = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+    const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY + 1)
+    const isOverlap = coords.some((([x, y]) => (y === BOARD_H) || board[y][x] !== 0))
+    return isOverlap
 }
 
 const removeFullLines = state => {
@@ -132,22 +127,29 @@ const createNewFig = state => {
   state.nextFigColor = getRandomIntInclusive(1, COLORS.length - 1)
 }
 
-const needNewFigure = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
-    const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY + 1)
-    const isOverlap = coords.some((([x, y]) => (y === BOARD_H) || board[y][x] !== 0))
-    return isOverlap
-}
-
-const checkEndGame = (state) => {
+const checkEndGame = state => {
     const newCoords = getFigCoords(state.figIndex, state.rotateIndex, state.offsetX, state.offsetY)
     if (newCoords.some((([x, y]) => state.board[y][x] !== 0))) {
         console.log('Game over!')
         process.exit()
     }
 }
+
+const canMoveLeft = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+    const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+    return ((offsetX + FIGURES[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0))
+}
+const canMoveRight = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+    const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+    return ((offsetX + FIGURES[figIndex][rotateIndex].w + FIGURES[figIndex][rotateIndex].ofx < BOARD_W) && oldCoords.every(([x, y]) => board[y][x + 1] === 0))     
+}
+const canRotate = (board, figIndex, newRotIndex, offsetX, offsetY) => {
+  const rotateFigCoords = getFigCoords(figIndex, newRotIndex, offsetX, offsetY)
+  return rotateFigCoords.every(([x, y]) => x >= 0 && x < BOARD_W && y < BOARD_H && board[y][x] === 0)
+}
+
 const update = (state) => {
   ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score } = state)
-  // update piece position
     switch (move) {
       case MOVES.DOWN:
         if (needNewFigure(state)) {
@@ -176,7 +178,7 @@ const update = (state) => {
         break
       case MOVES.ROTATE_CLOCKWISE: {
         const newRotIndex = rotateIndex === FIGURES[figIndex].length - 1 ? 0 : rotateIndex + 1
-        if (canRotate(figIndex, newRotIndex, offsetX, offsetY)) {
+        if (canRotate(board, figIndex, newRotIndex, offsetX, offsetY)) {
             state.rotateIndex = newRotIndex
             return state
         }
@@ -184,7 +186,7 @@ const update = (state) => {
       }
       case MOVES.ROTATE_COUNTER_CLOCKWISE: {
         const newRotIndex = rotateIndex === 0 ? FIGURES[figIndex].length - 1 : rotateIndex - 1
-        if (canRotate(figIndex, newRotIndex, offsetX, offsetY)) {
+        if (canRotate(board, figIndex, newRotIndex, offsetX, offsetY)) {
             state.rotateIndex = newRotIndex
             return state
         }
