@@ -70,11 +70,8 @@ int strcmpWithWildcard(const char *s1, const char *s2) {
 
 void run() {
   FILE *corePipe;
-  FILE *testFile;
   char actualNextStepResult[ARGS_SIZE];
-  char expectedNextStepResult[ARGS_SIZE];
   char actualRenderResult[FRAME_BUFFER_SIZE];
-  char expectedRenderResult[FRAME_BUFFER_SIZE];
   char line[255];
 
   snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, "INIT_STATE");

@@ -44,7 +44,7 @@ test:
 			echo "$$(awk '{if (((NR - 1) % 25 == 0) || ((NR - 2) % 25 == 0)) $$1=4; print $0}' $$f)" > $$f; \
 		done \
 	done
-	cd $(TEST_DIR) && ./test_init ./initCases/er.txt &&./test $(CASE_DIR)
+	cd $(TEST_DIR) && ./test_init ./initCases/er.txt && ./test $(CASE_DIR)
 
 one: one-runner
 	> logs.txt

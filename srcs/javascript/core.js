@@ -13,10 +13,14 @@ const COLORS = [
 const BOARD_W = 10
 const BOARD_H = 20
 const SCORES = [10, 30, 60, 100]
-const moves = {
-  down: 0, left: 1, right: 2, rotateClockwise: 3, rotateCounterClockwise: 4,
+const MOVES = {
+  DOWN: 0, 
+  LEFT: 1, 
+  RIGHT: 2, 
+  ROTATE_CLOCKWISE: 3, 
+  ROTATE_COUNTER_CLOCKWISE: 4,
 }
-const figures = [
+const FIGURES = [
   [ // I
     { squares: [[0, 0], [1, 0], [2, 0], [3, 0]], h: 1, w: 4, ofx: 0, ofy: 2 },
     { squares: [[0, 0], [0, 1], [0, 2], [0, 3]], h: 4, w: 1, ofx: 2, ofy: 0 },
@@ -66,14 +70,14 @@ const createBoard = (BOARD_W, BOARD_H) => {
 }
 
 const init = () => {
-  const move = moves.down
+  const move = MOVES.DOWN
   const board = createBoard(BOARD_W, BOARD_H)
-  const figIndex = getRandomIntInclusive(0, figures.length - 1)
+  const figIndex = getRandomIntInclusive(0, FIGURES.length - 1)
   const rotateIndex = 0
   const color = getRandomIntInclusive(1, COLORS.length - 1)
   const offsetX = figIndex === 0 ? 3 : 4
-  const offsetY = -1 * figures[figIndex][rotateIndex].ofy // ???
-  const nextFigIndex = getRandomIntInclusive(0, figures.length - 1)
+  const offsetY = -1 * FIGURES[figIndex][rotateIndex].ofy // ???
+  const nextFigIndex = getRandomIntInclusive(0, FIGURES.length - 1)
   const nextFigColor = getRandomIntInclusive(1, COLORS.length - 1)
   const score = 0
 
@@ -81,17 +85,17 @@ const init = () => {
 }
 
 const getFigCoords = (figIndex, rotateIndex, offsetX, offsetY) =>
-  figures[figIndex][rotateIndex].squares
-    .map(([x, y]) => [x + offsetX + figures[figIndex][rotateIndex].ofx, y + offsetY + figures[figIndex][rotateIndex].ofy])
+  FIGURES[figIndex][rotateIndex].squares
+    .map(([x, y]) => [x + offsetX + FIGURES[figIndex][rotateIndex].ofx, y + offsetY + FIGURES[figIndex][rotateIndex].ofy])
     .filter(([_, y]) => y >= 0) // don't care about segments above top of the screen
 
 const canMoveLeft = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
     const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    return ((offsetX + figures[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0))
+    return ((offsetX + FIGURES[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0))
 }
 const canMoveRight = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
     const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    return ((offsetX + figures[figIndex][rotateIndex].w + figures[figIndex][rotateIndex].ofx < BOARD_W) && oldCoords.every(([x, y]) => board[y][x + 1] === 0))     
+    return ((offsetX + FIGURES[figIndex][rotateIndex].w + FIGURES[figIndex][rotateIndex].ofx < BOARD_W) && oldCoords.every(([x, y]) => board[y][x + 1] === 0))     
 }
 const canRotate = (figIndex, newRotIndex, offsetX, offsetY) => {
   const rotateFigCoords = getFigCoords(figIndex, newRotIndex, offsetX, offsetY)
@@ -99,11 +103,10 @@ const canRotate = (figIndex, newRotIndex, offsetX, offsetY) => {
 }
 
 const removeFullLines = state => {
-   ({board, score} = state);
-  const boardWithoutFillLines = board.filter(line => line.some(c => c === 0))
+  const boardWithoutFillLines = state.board.filter(line => line.some(c => c === 0))
   if (boardWithoutFillLines.length < BOARD_H) {
     // update score
-    score += SCORES[BOARD_H - boardWithoutFillLines.length - 1]
+    state.score += SCORES[BOARD_H - boardWithoutFillLines.length - 1]
 
     // add new empty lines
     const newLines = []
@@ -111,20 +114,21 @@ const removeFullLines = state => {
       newLines.push(Array(BOARD_W).fill(0))
     }
     boardWithoutFillLines.unshift(...newLines)
-    board = boardWithoutFillLines
+    state.board = boardWithoutFillLines
   }
-  state.board = board
-  state.score = score
 }
 
 const createNewFig = state => {
-  ({nextFigIndex, nextFigColor} = state);
-  state.figIndex = nextFigIndex
-  state.nextFigIndex = getRandomIntInclusive(0, figures.length - 1)
+  // replace known things
+  state.figIndex = state.nextFigIndex
+  state.color = state.nextFigColor
+  
+  state.offsetX = state.figIndex === 0 ? 3 : 4
+  state.offsetY = -1 * FIGURES[state.figIndex][0].ofy
   state.rotateIndex = 0
-  state.offsetX = nextFigIndex === 0 ? 3 : 4
-  state.offsetY = -1 * figures[nextFigIndex][0].ofy
-  state.color = nextFigColor
+  
+  // calculate new 
+  state.nextFigIndex = getRandomIntInclusive(0, FIGURES.length - 1)
   state.nextFigColor = getRandomIntInclusive(1, COLORS.length - 1)
 }
 
@@ -145,7 +149,7 @@ const update = (state) => {
   ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score } = state)
   // update piece position
     switch (move) {
-      case moves.down:
+      case MOVES.DOWN:
         
           // check is new position is overlap or on floor
           if (needNewFigure(state)) {
@@ -166,28 +170,28 @@ const update = (state) => {
           }
           state.offsetY += 1
         return state
-      case moves.left:
+      case MOVES.LEFT:
         if (canMoveLeft(state)) {
             state.offsetX -= 1
             return state
         }
         break
-      case moves.right:
+      case MOVES.RIGHT:
         if (canMoveRight(state)) {
             state.offsetX += 1
             return state
         }
         break
-      case moves.rotateClockwise: {
-        const newRotIndex = rotateIndex === figures[figIndex].length - 1 ? 0 : rotateIndex + 1
+      case MOVES.ROTATE_CLOCKWISE: {
+        const newRotIndex = rotateIndex === FIGURES[figIndex].length - 1 ? 0 : rotateIndex + 1
         if (canRotate(figIndex, newRotIndex, offsetX, offsetY)) {
             state.rotateIndex = newRotIndex
             return state
         }
         break
       }
-      case moves.rotateCounterClockwise: {
-        const newRotIndex = rotateIndex === 0 ? figures[figIndex].length - 1 : rotateIndex - 1
+      case MOVES.ROTATE_COUNTER_CLOCKWISE: {
+        const newRotIndex = rotateIndex === 0 ? FIGURES[figIndex].length - 1 : rotateIndex - 1
         if (canRotate(figIndex, newRotIndex, offsetX, offsetY)) {
             state.rotateIndex = newRotIndex
             return state
@@ -200,13 +204,13 @@ const update = (state) => {
 }
 
 
-const Reset = '\x1B[m'
-const Inverse = '\x1B[7m'
-const ceil = '\u2582'
-const floor = Inverse + '\u2586' + Reset
-const left = Inverse + '\u258a' + Reset
-const right = '\u258e'
-const spacer = '.'
+const RESET = '\x1B[m' // reset escape sequence
+const INVERSE = '\x1B[7m' // inverse white and black part of letter square
+const CEIL = '\u2582'
+const FLOOR = INVERSE + '\u2586' + RESET
+const LEFT = INVERSE + '\u258a' + RESET
+const RIGHT = '\u258e'
+const SPACER = '.'
 
 const renderNextPiece = (figIndex, color) => {
   const w = 6
@@ -219,28 +223,28 @@ const renderNextPiece = (figIndex, color) => {
   let res = ''
   res += ' '
   for (let x = 0; x < w; x++) {
-    res += ceil
+    res += CEIL
   }
   res += ' '
   resArr.push(res)
   res = ''
 
   for (let y = 0; y < h; y++) {
-    res += left
+    res += LEFT
     for (let x = 0; x < w; x++) {
       if (coords.some(([xc, yc]) => xc === x && yc === y)) {
-        res += COLORS[color] + ' ' + Reset
+        res += COLORS[color] + ' ' + RESET
       } else {
         res += ' '
       }
     }
-    res += right
+    res += RIGHT
     resArr.push(res)
     res = ''
   }
   res += ' '
   for (let x = 0; x < w; x++) {
-    res += floor
+    res += FLOOR
   }
   res += ' '
   resArr.push(res)
@@ -259,20 +263,20 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
   const nP = renderNextPiece(nextFigIndex, nextFigColor)
   let res = ' '
   for (let x = 0; x < BOARD_W; x++) {
-    res += ceil
+    res += CEIL
   }
   res += ' \n'
 
   for (let y = 0; y < BOARD_H; y++) {
-    res += left
+    res += LEFT
     for (let x = 0; x < BOARD_W; x++) {
       if (board[y][x] !== 0) {
-        res += COLORS[board[y][x]] + ' ' + Reset
+        res += COLORS[board[y][x]] + ' ' + RESET
       } else {
-        res += (x % 2 === 0) ? ' ' : spacer
+        res += (x % 2 === 0) ? ' ' : SPACER
       }
     }
-    res += right
+    res += RIGHT
 
     if (y === 0) {
       res += ' ' + String(score).padStart(6, '0')
@@ -286,7 +290,7 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
   }
   res += ' '
   for (let x = 0; x < BOARD_W; x++) {
-    res += floor
+    res += FLOOR
   }
   res += ' '
   // res += '\n'
