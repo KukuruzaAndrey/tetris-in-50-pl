@@ -243,6 +243,66 @@ void update(struct state *state) {
   }
 }
 
+char *renderLine(char *bucket, const unsigned y, const unsigned board[BOARD_H][BOARD_W]) {
+  for (unsigned x = 0; x < BOARD_W; x++) {
+    if (state->board[y][x] != 0) {
+      bucket = stpcpy(bucket, COLORS[state->board[y][x]]);
+      bucket = stpcpy(bucket, " ");
+      bucket = stpcpy(bucket, RESET);
+    } else {
+      bucket = stpcpy(bucket, (x % 2 == 0) ? " " : SPACER);
+    }
+  }
+  return bucket;
+}
+
+char *renderNextPieceLine(const struct coords coords, char *bucket, const unsigned y, unsigned nextFigColor) {
+  if (y > NEXT_P_BOARD_H + 2) return bucket;
+  if (y == 0) {
+    bucket = stpcpy(bucket, " ");
+    sprintf("%06d", score);
+    return bucket + 6;
+  }
+  if (y == 1) {
+    for (unsigned x = 0; x < NEXT_P_BOARD_W; x++) {
+      bucket = stpcpy(bucket, CEIL);
+    }
+    return bucket;
+  }
+  if (y == NEXT_P_BOARD_H + 2) {
+    for (unsigned x = 0; x < NEXT_P_BOARD_W; x++) {
+      bucket = stpcpy(bucket, FLOOR);
+    }
+    return bucket;
+  }
+
+  bucket = stpcpy(bucket, LEFT);
+
+  for (let x = 0; x < NEXT_P_BOARD_W; x++) {
+    unsigned isBlank = 1;
+    for (unsigned i = 0; i < coords.count; ++i) {
+      unsigned xc = coords.squares[i][0];
+      unsigned yc = coords.squares[i][1];
+      if (x == xc && y == yc - 2) {
+        isBlank = 1;
+        break;
+      }
+    }
+    if (!isBlank) {
+      bucket = stpcpy(bucket, COLORS[nextFigColor]);
+      bucket = stpcpy(bucket, " ");
+      bucket = stpcpy(bucket, RESET);
+    } else {
+      bucket = stpcpy(bucket, " ");
+    }
+
+
+  }
+  bucket = stpcpy(bucket, RIGHT);
+
+  return bucket;
+}
+
 void render(char *res, struct state *state) {
 
   // add piece to board for simplifying render
@@ -256,37 +316,23 @@ void render(char *res, struct state *state) {
 
   char *bucket = stpcpy(res, " ");
   for (unsigned x = 0; x < BOARD_W; x++) {
-    bucket = stpcpy(bucket, Ceil);
+    bucket = stpcpy(bucket, CEIL);
   }
   bucket = stpcpy(bucket, " \n");
+  struct coords nextFigCoords;
+  getFigCoords(&nextFigCoords, state->nextFigIndex, 0, state->nextFigIndex == = 5 ? 2 : 1,
+               state->nextFigIndex == = 5 ? 2 : 1)
 
   for (unsigned y = 0; y < BOARD_H; y++) {
     bucket = stpcpy(bucket, Left);
-    for (unsigned x = 0; x < BOARD_W; x++) {
-      if (state->board[y][x] != 0) {
-        bucket = stpcpy(bucket, COLORS[state->board[y][x]]);
-        bucket = stpcpy(bucket, " ");
-        bucket = stpcpy(bucket, Reset);
-      } else {
-        bucket = stpcpy(bucket, (x % 2 == 0) ? " " : spacer);
-      }
-    }
+    bucket = renderLine(bucket, y);
     bucket = stpcpy(bucket, Right);
-
-//    if (y == = 0) {
-//      res += ' ' + String(score).padStart(6, '0')
-//    }
-//
-//    if (y > 0 && y - 1 < nP.length) {
-//      res += nP[y - 1]
-//    }
-
+    bucket = renderNextPieceLine(nextFigCoords, bucket, y, state->nextFigIndex);
     bucket = stpcpy(bucket, "\n");
   }
-
   bucket = stpcpy(bucket, " ");
   for (unsigned x = 0; x < BOARD_W; x++) {
-    bucket = stpcpy(bucket, Floor);
+    bucket = stpcpy(bucket, FLOOR);
   }
   bucket = stpcpy(bucket, " ");
 
@@ -309,7 +355,7 @@ int main(int argc, char **argv) {
     update(&state);
     printState(&state);
     printState(&state);
-    char res[1500];
+    char res[3000];
     render(res, &state);
     printf("%s\n", res);
   } else {

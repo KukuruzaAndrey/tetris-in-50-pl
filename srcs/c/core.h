@@ -112,11 +112,14 @@ struct state {
   unsigned score;
 };
 
-#define Reset "\x1B[m"
-#define Inverse "\x1B[7m"
-#define Ceil "\u2582"
-#define Floor Inverse "\u2586" Reset
-#define Left Inverse "\u258a" Reset
-#define Right "\u258e"
-#define spacer "."
+#define RESET "\x1B[m" // reset escape sequence
+#define INVERSE "\x1B[7m" // inverse white and black part of letter square
+#define CEIL "\u2582"
+#define FLOOR INVERSE "\u2586" RESET
+#define LEFT INVERSE "\u258a" RESET
+#define RIGHT "\u258e"
+#define SPACER "."
+
+#define NEXT_P_BOARD_W 6
+#define NEXT_P_BOARD_H 6
 
