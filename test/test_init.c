@@ -19,7 +19,9 @@
 #define YELLOW "\033[33m"
 #define RESET "\x1B[m"
 
-char *corePath = "../srcs/javascript/core.js";
+//char *corePath = "../srcs/javascript/core.js";
+char *corePath = "../srcs/c/core";
+
 char coreInputs[ARGS_SIZE];
 char coreArgs[ARGS_SIZE + 30];
 char *bucket;

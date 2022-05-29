@@ -19,8 +19,8 @@ one-runner: one-runner.c utils.c
 	$(CC) $(CFLAGS) -o one-runner one-runner.c utils.c
 
 c: $(RUNNER) $(SRCS_DIR)/c
-	$(CC) $(CFLAGS) -o c/core c/core.c
-	$(RUNNER) c/core
+	$(CC) $(CFLAGS) -o $(SRCS_DIR)/c/core $(SRCS_DIR)/c/core.c
+	./$(RUNNER) $(SRCS_DIR)/c/core
 
 js: $(RUNNER)
 	./$(RUNNER) $(SRCS_DIR)/javascript/core.js

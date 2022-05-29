@@ -6,11 +6,11 @@
 
 const int SCORES[] = {10, 30, 60, 100};
 enum MOVES {
-  DOWN = 0,
-  LEFT,
-  RIGHT,
-  ROTATE_CLOCKWISE,
-  ROTATE_COUNTER_CLOCKWISE
+  MOVE_DOWN = 0,
+  MOVE_LEFT,
+  MOVE_RIGHT,
+  MOVE_ROTATE_CLOCKWISE,
+  MOVE_ROTATE_COUNTER_CLOCKWISE
 };
 const char *COLORS[] = {
     "", // for empty

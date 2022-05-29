@@ -89,7 +89,7 @@ void eval(const char *corePath, char *coreInputs) {
 
   // Concatenate path-to-core and inputs aka tetris state
   snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
-  
+  printf("%s\n", coreInputs);
   // Open pipe with core
   FILE *core = checkError(popen(coreArgs, "r"), coreArgs);
   fprintf(logs, "%s", coreInputs);
@@ -99,7 +99,7 @@ void eval(const char *corePath, char *coreInputs) {
     if (line == 0) {
       strncpy(coreInputs, resLineBuff, INPUT_SIZE);
       if (strcmp(resLineBuff, "Game over!\n") == 0) {
-        fputs("=== Game over! ===\n", logs);
+        fputs("Game over!\n", logs);
         printf("%s\n", "Game over!");
         fclose(logs);
         exit(0);

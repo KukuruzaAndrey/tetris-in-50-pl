@@ -19,7 +19,7 @@ unsigned getRandomIntInclusive(unsigned min, unsigned max) {
 }
 
 void initState(struct state *state) {
-  state->move = DOWN;
+  state->move = MOVE_DOWN;
   memset(state->board, 0, sizeof(state->board));
   state->figIndex = getRandomIntInclusive(0, FIG_COUNT - 1);
   state->rotateIndex = 0;
@@ -49,7 +49,7 @@ void parseState(char **argv, struct state *dest) {
   for (unsigned i = 0; i < BOARD_H * BOARD_W; ++i) {
     unsigned y = i / BOARD_W;
     unsigned x = i % BOARD_W;
-    dest->board[y][x] = atoi(&argv[2][i]);
+    dest->board[y][x] = argv[2][i] - '0';
   }
   dest->figIndex = atoi(argv[3]);
   dest->rotateIndex = atoi(argv[4]);
@@ -86,10 +86,10 @@ unsigned needNewFigure(const struct state *state) {
     unsigned x = coords.squares[i][0];
     unsigned y = coords.squares[i][1];
     if (y == BOARD_H || state->board[y][x] != 0) {
-      return 0;
+      return 1;
     }
   }
-  return 1;
+  return 0;
 }
 
 void removeFullLines(struct state *state) {
@@ -103,7 +103,8 @@ void removeFullLines(struct state *state) {
       }
     }
     if (full) {
-      memmove(state->board[y], state->board[countFullLines], (y - countFullLines) * (sizeof state->board[y]));
+      memmove(state->board[countFullLines + 1], state->board[countFullLines],
+              (y - countFullLines) * (sizeof state->board[y]));
       countFullLines++;
     }
   }
@@ -139,7 +140,7 @@ void checkEndGame(const struct state *state) {
     unsigned x = newCoords.squares[i][0];
     unsigned y = newCoords.squares[i][1];
     if (state->board[y][x] != 0) {
-      printf("%s", "The End");
+      printf("%s\n", "Game over!");
       exit(0);
     }
   }
@@ -197,7 +198,7 @@ unsigned canRotate(const unsigned board[BOARD_H][BOARD_W],
 
 void update(struct state *state) {
   switch (state->move) {
-    case DOWN:
+    case MOVE_DOWN:
       if (needNewFigure(state)) {
         struct coords oldCoords;
         getFigCoords(&oldCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
@@ -214,17 +215,17 @@ void update(struct state *state) {
       }
       state->offsetY += 1;
       break;
-    case LEFT:
+    case MOVE_LEFT:
       if (canMoveLeft(state)) {
         state->offsetX -= 1;
       }
       break;
-    case RIGHT:
+    case MOVE_RIGHT:
       if (canMoveRight(state)) {
         state->offsetX += 1;
       }
       break;
-    case ROTATE_CLOCKWISE: {
+    case MOVE_ROTATE_CLOCKWISE: {
       unsigned newRotIndex = (state->rotateIndex == FIGURES[state->figIndex].count - 1) ? 0 :
                              state->rotateIndex + 1;
       if (canRotate(state->board, state->figIndex, newRotIndex, state->offsetX, state->offsetY)) {
@@ -232,7 +233,7 @@ void update(struct state *state) {
       }
     }
       break;
-    case ROTATE_COUNTER_CLOCKWISE: {
+    case MOVE_ROTATE_COUNTER_CLOCKWISE: {
       unsigned newRotIndex = (state->rotateIndex == 0) ? FIGURES[state->figIndex].count - 1 :
                              state->rotateIndex - 1;
       if (canRotate(state->board, state->figIndex, newRotIndex, state->offsetX, state->offsetY)) {
@@ -245,8 +246,8 @@ void update(struct state *state) {
 
 char *renderLine(char *bucket, const unsigned y, const unsigned board[BOARD_H][BOARD_W]) {
   for (unsigned x = 0; x < BOARD_W; x++) {
-    if (state->board[y][x] != 0) {
-      bucket = stpcpy(bucket, COLORS[state->board[y][x]]);
+    if (board[y][x] != 0) {
+      bucket = stpcpy(bucket, COLORS[board[y][x]]);
       bucket = stpcpy(bucket, " ");
       bucket = stpcpy(bucket, RESET);
     } else {
@@ -256,47 +257,50 @@ char *renderLine(char *bucket, const unsigned y, const unsigned board[BOARD_H][B
   return bucket;
 }
 
-char *renderNextPieceLine(const struct coords coords, char *bucket, const unsigned y, unsigned nextFigColor) {
+char *
+renderNextPieceLine(char *bucket, const unsigned y, const struct coords coords, unsigned nextFigColor, unsigned score) {
   if (y > NEXT_P_BOARD_H + 2) return bucket;
   if (y == 0) {
     bucket = stpcpy(bucket, " ");
-    sprintf("%06d", score);
+    sprintf(bucket, "%06d", score);
     return bucket + 6;
   }
   if (y == 1) {
+    bucket = stpcpy(bucket, " ");
     for (unsigned x = 0; x < NEXT_P_BOARD_W; x++) {
       bucket = stpcpy(bucket, CEIL);
     }
+    bucket = stpcpy(bucket, " ");
     return bucket;
   }
   if (y == NEXT_P_BOARD_H + 2) {
+    bucket = stpcpy(bucket, " ");
     for (unsigned x = 0; x < NEXT_P_BOARD_W; x++) {
       bucket = stpcpy(bucket, FLOOR);
     }
+    bucket = stpcpy(bucket, " ");
     return bucket;
   }
 
   bucket = stpcpy(bucket, LEFT);
 
-  for (let x = 0; x < NEXT_P_BOARD_W; x++) {
-    unsigned isBlank = 1;
+  for (unsigned x = 0; x < NEXT_P_BOARD_W; x++) {
+    unsigned isPiece = 0;
     for (unsigned i = 0; i < coords.count; ++i) {
       unsigned xc = coords.squares[i][0];
       unsigned yc = coords.squares[i][1];
-      if (x == xc && y == yc - 2) {
-        isBlank = 1;
+      if (xc == x && yc == y - 2) {
+        isPiece = 1;
         break;
       }
     }
-    if (!isBlank) {
+    if (isPiece) {
       bucket = stpcpy(bucket, COLORS[nextFigColor]);
       bucket = stpcpy(bucket, " ");
       bucket = stpcpy(bucket, RESET);
     } else {
       bucket = stpcpy(bucket, " ");
     }
-
-
   }
   bucket = stpcpy(bucket, RIGHT);
 
@@ -320,14 +324,14 @@ void render(char *res, struct state *state) {
   }
   bucket = stpcpy(bucket, " \n");
   struct coords nextFigCoords;
-  getFigCoords(&nextFigCoords, state->nextFigIndex, 0, state->nextFigIndex == = 5 ? 2 : 1,
-               state->nextFigIndex == = 5 ? 2 : 1)
+  getFigCoords(&nextFigCoords, state->nextFigIndex, 0, state->nextFigIndex == 5 ? 2 : 1,
+               state->nextFigIndex == 5 ? 2 : 1);
 
   for (unsigned y = 0; y < BOARD_H; y++) {
-    bucket = stpcpy(bucket, Left);
-    bucket = renderLine(bucket, y);
-    bucket = stpcpy(bucket, Right);
-    bucket = renderNextPieceLine(nextFigCoords, bucket, y, state->nextFigIndex);
+    bucket = stpcpy(bucket, LEFT);
+    bucket = renderLine(bucket, y, state->board);
+    bucket = stpcpy(bucket, RIGHT);
+    bucket = renderNextPieceLine(bucket, y, nextFigCoords, state->nextFigColor, state->score);
     bucket = stpcpy(bucket, "\n");
   }
   bucket = stpcpy(bucket, " ");
@@ -346,23 +350,26 @@ void render(char *res, struct state *state) {
 
 int main(int argc, char **argv) {
   struct state state;
-
-  if (strcmp(argv[1], "0init") == 0) {
-    initState(&state);
-    printState(&state);
-  } else if (argc == 11) {
+  char res[3000];
+//  printf("argc - %d\n", argc);
+  if (argc == 11) {
     parseState(argv, &state);
     update(&state);
     printState(&state);
+    render(res, &state);
+    printf("%s\n", res);
+  } else if (argc == 2 && !strcmp(argv[1], "INIT_STATE")) {
+    initState(&state);
     printState(&state);
-    char res[3000];
     render(res, &state);
     printf("%s\n", res);
   } else {
+    printf("argv[0] - %s\n", argv[0]);
+    printf("argv[1] - %s\n", argv[1]);
+
     puts("incorrect arguments");
     exit(1);
   }
-
   return 0;
 }
 

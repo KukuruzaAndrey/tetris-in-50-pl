@@ -296,7 +296,7 @@ if (process.argv.length === 12) {
   const state = update(parseState())
   console.log(stateToStr(state))
   console.log(render(state))
-} else if (process.argv[2] === 'INIT_STATE') {
+} else if (process.argv.length === 3 && process.argv[2] === 'INIT_STATE') {
   const state = init()
   console.log(stateToStr(state))
   console.log(render(state))
