@@ -65,9 +65,9 @@ void getFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex
   unsigned count = 0;
   for (unsigned i = 0; i < 4; ++i) {
     // check overflow !
-    unsigned y = FIGURES[figIndex].rotations[rotateIndex].squares[count][1] + offsetY +
+    unsigned y = FIGURES[figIndex].rotations[rotateIndex].squares[i][1] + offsetY +
                  FIGURES[figIndex].rotations[rotateIndex].ofy;
-    unsigned x = FIGURES[figIndex].rotations[rotateIndex].squares[count][0] + offsetX +
+    unsigned x = FIGURES[figIndex].rotations[rotateIndex].squares[i][0] + offsetX +
                  FIGURES[figIndex].rotations[rotateIndex].ofx;
     if (y > 20)
       continue;
