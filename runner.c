@@ -62,8 +62,10 @@ char processKeypress() {
       read(STDIN_FILENO, &n, 1);
       if (n == '[') {
         read(STDIN_FILENO, &n, 1);
-        // down(tick): 0, left: 1, right: 2, rotateClockwise: 3, rotateCounterClockwise: 4
+        // down(tick): 0, left: 1, right: 2, rotateClockwise: 3, rotateCounterClockwise: 4, drop: 5
         switch (n) {
+          case 'A':
+            return '5';
           case 'B':
             return '0';
           case 'C':
@@ -89,7 +91,7 @@ void eval(const char *corePath, char *coreInputs) {
 
   // Concatenate path-to-core and inputs aka tetris state
   snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
-  printf("%s\n", coreInputs);
+  // printf("%s\n", coreInputs);
   // Open pipe with core
   FILE *core = checkError(popen(coreArgs, "r"), coreArgs);
   fprintf(logs, "%s", coreInputs);

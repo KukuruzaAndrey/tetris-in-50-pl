@@ -163,6 +163,7 @@ void run(const char *testFileName) {
         printf("%s:%d - %sFailed%s\n", testFileName, file_line, RED, RESET);
         printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualRenderResult),
                strlen(expectedRenderResult));
+        printf("Case:\n%s\n", coreInputs);
         printf("Actual Result:\n%s\n", actualRenderResult);
         printf("Expected Result:\n%s\n\n", expectedRenderResult);
         printf("%s%s%s\n", RED, "FAIL", RESET);

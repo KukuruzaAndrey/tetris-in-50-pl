@@ -9,6 +9,7 @@ const MOVES = {
   RIGHT: 2, 
   ROTATE_CLOCKWISE: 3, 
   ROTATE_COUNTER_CLOCKWISE: 4,
+  DROP: 5,
 }
 
 const COLORS = [
@@ -148,6 +149,13 @@ const canRotate = (board, figIndex, newRotIndex, offsetX, offsetY) => {
   return rotateFigCoords.every(([x, y]) => x >= 0 && x < BOARD_W && y < BOARD_H && board[y][x] === 0)
 }
 
+const getOffsetAtDrop = state => {
+    while (!    needNewFigure(state)) {
+        state.offsetY += 1
+    }
+    return state.offsetY
+}
+
 const update = (state) => {
   ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score } = state)
     switch (move) {
@@ -192,6 +200,16 @@ const update = (state) => {
         }
         break
       }
+      case MOVES.DROP:
+        const newOffsetY = getOffsetAtDrop(state)
+        const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, newOffsetY)
+        for (const [x, y] of oldCoords) {
+            board[y][x] = color
+        }
+        removeFullLines(state)
+        createNewFig(state)
+        checkEndGame(state)
+        return state
     }
 
   return state
