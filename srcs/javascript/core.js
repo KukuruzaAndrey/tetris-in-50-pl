@@ -150,7 +150,7 @@ const canRotate = (board, figIndex, newRotIndex, offsetX, offsetY) => {
 }
 
 const getOffsetAtDrop = state => {
-    while (!    needNewFigure(state)) {
+    while (!needNewFigure(state)) {
         state.offsetY += 1
     }
     return state.offsetY
