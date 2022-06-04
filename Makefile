@@ -22,7 +22,7 @@ PL_CMPL_LIST := C
 
 
 ##### RULES #####
-all: $(RUNNER) cmpl
+all: run
 
 ### ALL PL-S ###
 cmpl_all: $(foreach PL, $(PL_CMPL_LIST), $($(PL)))
