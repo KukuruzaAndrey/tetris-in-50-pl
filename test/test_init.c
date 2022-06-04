@@ -19,9 +19,6 @@
 #define YELLOW "\033[33m"
 #define RESET "\x1B[m"
 
-//char *corePath = "../srcs/javascript/core.js";
-char *corePath = "../srcs/c/core";
-
 char coreInputs[ARGS_SIZE];
 char coreArgs[ARGS_SIZE + 30];
 char *bucket;
@@ -70,7 +67,7 @@ int strcmpWithWildcard(const char *s1, const char *s2) {
   return !(*(s1 + i) == *(s2 + j));
 }
 
-void run() {
+void run(const char* corePath) {
   FILE *corePipe;
   char actualNextStepResult[ARGS_SIZE];
   char actualRenderResult[FRAME_BUFFER_SIZE];
@@ -138,14 +135,14 @@ void readER(FILE *fp) {
 }
 
 int main(int argc, char **argv) {
-  if (argc < 2) {
+  if (argc < 3) {
     printf("%s\n", "provide arguments");
     return 1;
   }
 
   FILE *erFP = checkError(fopen(argv[1], "r"), argv[1]);
   readER(erFP);
-  run();
+  run(argv[2]);
   printf("%s%s%s\n", GREEN, "SUCCESS", RESET);
   return EXIT_SUCCESS;
 }

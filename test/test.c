@@ -17,9 +17,6 @@
 #define YELLOW "\033[33m"
 #define RESET "\x1B[m"
 
-//char *corePath = "../srcs/javascript/core.js";
-char *corePath = "../srcs/c/core";
-
 char coreInputs[ARGS_SIZE];
 char coreArgs[ARGS_SIZE + 30];
 char *bucket;
@@ -81,7 +78,7 @@ int strcmpWithSkip(const char *s1, const char *s2) {
   return !(*(s1 + i) == *(s2 + j));
 }
 
-void run(const char *testFileName) {
+void run(const char *testFileName, const char *corePath) {
   FILE *corePipe;
   FILE *testFile;
   char actualNextStepResult[ARGS_SIZE];
@@ -106,7 +103,7 @@ void run(const char *testFileName) {
   while (fgets(coreInputs, ARGS_SIZE, testFile) != NULL) {
     file_line += 1;
 
-    // concatenate path for core and args
+    // concatenate path to core and args
     snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
     // printf("%s - args\n", coreArgs);
     // open core with args
@@ -141,7 +138,8 @@ void run(const char *testFileName) {
       printf("%s:%d - %sPassed%s\n", testFileName, file_line, GREEN, RESET);
     } else {
       printf("%s:%d - %sFailed%s\n", testFileName, file_line, RED, RESET);
-      printf("strlen(actualNextStepResult) - %lu   strlen(expectedNextStepResult) - %lu\n", strlen(actualNextStepResult),
+      printf("strlen(actualNextStepResult) - %lu   strlen(expectedNextStepResult) - %lu\n",
+             strlen(actualNextStepResult),
              strlen(expectedNextStepResult));
       printf("Case:\n%s\n", coreInputs);
       printf("Actual Result:\n%s\n", actualNextStepResult);
@@ -182,7 +180,7 @@ void run(const char *testFileName) {
   fclose(testFile);
 }
 
-void traverseAndExec(char *dirPath, void (*exec)(const char *)) {
+void traverseAndExec(char *dirPath, void (*exec)(const char *, const char *), char *corePath) {
   // printf("entry %s\n", dirPath);
   DIR *d = checkError(opendir(dirPath), dirPath);
   struct dirent *entry;
@@ -193,11 +191,11 @@ void traverseAndExec(char *dirPath, void (*exec)(const char *)) {
     switch (entry->d_type) {
       case DT_REG:
         // printf("%s%s%s\n", YELLOW, pathToSubDir, RESET);
-        run(pathToSubDir);
+        run(pathToSubDir, corePath);
         break;
       case DT_DIR:
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-          traverseAndExec(pathToSubDir, exec);
+          traverseAndExec(pathToSubDir, exec, corePath);
         }
         break;
       default:
@@ -221,15 +219,15 @@ int isDirectory(const char *path) {
 }
 
 int main(int argc, char **argv) {
-  if (argc < 2) {
+  if (argc < 3) {
     printf("%s\n", "provide arguments");
     return 1;
   }
 
   if (isDirectory(argv[1])) {
-    traverseAndExec(argv[1], &run);
+    traverseAndExec(argv[1], &run, argv[2]);
   } else {
-    run(argv[1]);
+    run(argv[1], argv[2]);
   }
   printf("%s%s%s\n", GREEN, "SUCCESS", RESET);
   return EXIT_SUCCESS;
