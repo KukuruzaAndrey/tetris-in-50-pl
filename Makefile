@@ -34,7 +34,7 @@ js: $(RUNNER)
 	./$(RUNNER) $(JS)
 
 $(TEST_RUNNERS): %: %.c utils.c
-test: $(TEST_RUNNERS)
+test: $(TEST_RUNNERS) # compile PL
 	# generate tests for rotate counter-clockwise from rotate clockwise tests 
 	# for figures that have two or one rotations (I, S, Z, O) (results are the same, only command is diffirent)
 	# find lines with arguments; change first '3' to '4'; write changes in-place (echo do the trick)
@@ -49,7 +49,7 @@ test: $(TEST_RUNNERS)
 
 	$(TEST_DIR)/test_init $(TEST_DIR)/initCases/er.txt $($(PL)) && $(TEST_DIR)/test $(TEST_DIR)/$(CASE_DIR)/$(TEST_PATH) $($(PL))
 
-test_all: $(TEST_RUNNERS)
+test_all: $(TEST_RUNNERS) # compile all
 	$(foreach PL, $(PL_LIST), $(MAKE) test PL=$(PL) &&) true 
 
 one: one-runner

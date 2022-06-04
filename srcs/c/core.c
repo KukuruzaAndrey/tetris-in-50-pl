@@ -39,8 +39,7 @@ void printState(const struct state *state) {
     }
   }
   strBoard[BOARD_H * BOARD_W] = 0;
-  printf("%u %s %u %u %u %d %d %u %u %u\n",
-         state->move, strBoard, state->figIndex, state->rotateIndex, state->color,
+  printf("%u %s %u %u %u %d %d %u %u %u\n", state->move, strBoard, state->figIndex, state->rotateIndex, state->color,
          state->offsetX, state->offsetY, state->nextFigIndex, state->nextFigColor, state->score);
 }
 
@@ -179,11 +178,8 @@ unsigned canMoveRight(const struct state *state) {
   return 1;
 }
 
-unsigned canRotate(const unsigned board[BOARD_H][BOARD_W],
-                   const unsigned figIndex,
-                   const unsigned newRotIndex,
-                   const int offsetX,
-                   const int offsetY) {
+unsigned canRotate(const unsigned board[BOARD_H][BOARD_W], const unsigned figIndex, const unsigned newRotIndex,
+                   const int offsetX, const int offsetY) {
   struct coords rotateFigCoords;
   getFigCoords(&rotateFigCoords, figIndex, newRotIndex, offsetX, offsetY);
   for (unsigned i = 0; i < rotateFigCoords.count; ++i) {
@@ -194,6 +190,13 @@ unsigned canRotate(const unsigned board[BOARD_H][BOARD_W],
     }
   }
   return 1;
+}
+
+int getOffsetAtDrop(struct state *state) {
+  while (!needNewFigure(state)) {
+    state->offsetY += 1;
+  }
+  return state->offsetY;
 }
 
 void update(struct state *state) {
@@ -226,21 +229,34 @@ void update(struct state *state) {
       }
       break;
     case MOVE_ROTATE_CLOCKWISE: {
-      unsigned newRotIndex = (state->rotateIndex == FIGURES[state->figIndex].count - 1) ? 0 :
-                             state->rotateIndex + 1;
+      unsigned newRotIndex = (state->rotateIndex == FIGURES[state->figIndex].count - 1) ? 0 : state->rotateIndex + 1;
       if (canRotate(state->board, state->figIndex, newRotIndex, state->offsetX, state->offsetY)) {
         state->rotateIndex = newRotIndex;
       }
-    }
       break;
+    }
     case MOVE_ROTATE_COUNTER_CLOCKWISE: {
-      unsigned newRotIndex = (state->rotateIndex == 0) ? FIGURES[state->figIndex].count - 1 :
-                             state->rotateIndex - 1;
+      unsigned newRotIndex = (state->rotateIndex == 0) ? FIGURES[state->figIndex].count - 1 : state->rotateIndex - 1;
       if (canRotate(state->board, state->figIndex, newRotIndex, state->offsetX, state->offsetY)) {
         state->rotateIndex = newRotIndex;
       }
-    }
       break;
+    }
+    case MOVE_DROP: {
+      int newOffsetY = getOffsetAtDrop(state);
+      struct coords coords;
+      getFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, newOffsetY);
+      for (unsigned i = 0; i < coords.count; ++i) {
+        unsigned x = coords.squares[i][0];
+        unsigned y = coords.squares[i][1];
+        state->board[y][x] = state->color;
+      }
+
+      removeFullLines(state);
+      createNewFig(state);
+      checkEndGame(state);
+      break;
+    }
   }
 }
 

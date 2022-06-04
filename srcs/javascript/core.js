@@ -202,8 +202,8 @@ const update = (state) => {
       }
       case MOVES.DROP:
         const newOffsetY = getOffsetAtDrop(state)
-        const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, newOffsetY)
-        for (const [x, y] of oldCoords) {
+        const coords = getFigCoords(figIndex, rotateIndex, offsetX, newOffsetY)
+        for (const [x, y] of coords) {
             board[y][x] = color
         }
         removeFullLines(state)
