@@ -13,26 +13,38 @@ CASE_DIR := cases
 RUNNER := runner
 TEST_RUNNERS := $(TEST_DIR)/test $(TEST_DIR)/test_init
 
-### PL-S ###
+### PL-S ###  <-- please fill it when add new PL
 C := ./$(SRCS_DIR)/c/core
 JS := ./$(SRCS_DIR)/javascript/core.js
 PL ?= C
 PL_LIST := C JS
+PL_CMPL_LIST := C
 
 
 ##### RULES #####
-all: $(RUNNER) one-runner
+all: $(RUNNER) cmpl
 
+### ALL PL-S ###
+cmpl_all: $(foreach PL, $(PL_CMPL_LIST), $($(PL)))
+
+test_all: $(TEST_RUNNERS) cmpl_all
+	$(foreach PL, $(PL_LIST), $(MAKE) test PL=$(PL) &&) true
+
+### RUNNNER ###
 $(RUNNER): runner.c utils.c
 one-runner: one-runner.c utils.c
 
-c: $(RUNNER) $(SRCS_DIR)/c
+### CURRENT PL ###
+cmpl: $(if $(filter $(PL), $(PL_CMPL_LIST)), $($(PL)))
+
+run: $(RUNNER) cmpl 
+	./$(RUNNER) $($(PL))
+
+### COMPILE PL ### <-- please add new rule when add new compiled PL 
+$(C):
 	$(CC) $(CFLAGS) -o $(C) $(addsuffix .c,$(C))
-	./$(RUNNER) $(C)
 
-js: $(RUNNER)
-	./$(RUNNER) $(JS)
-
+### TEST ###
 $(TEST_RUNNERS): %: %.c utils.c
 test: $(TEST_RUNNERS) # compile PL
 	# generate tests for rotate counter-clockwise from rotate clockwise tests 
@@ -49,14 +61,11 @@ test: $(TEST_RUNNERS) # compile PL
 
 	$(TEST_DIR)/test_init $(TEST_DIR)/initCases/er.txt $($(PL)) && $(TEST_DIR)/test $(TEST_DIR)/$(CASE_DIR)/$(TEST_PATH) $($(PL))
 
-test_all: $(TEST_RUNNERS) # compile all
-	$(foreach PL, $(PL_LIST), $(MAKE) test PL=$(PL) &&) true 
+### CLEAN ###
+clean_C: 
+	rm -f $(C)
 
-one: one-runner
-	> logs.txt
-	xargs -a ./one-cases.txt -L 1 ./one-runner $($(PL))
-
-clean:
+clean: $(foreach PL, $(PL_CMPL_LIST), clean_$(PL))
 	rm -f $(RUNNER)
 	rm -f one-runner
 	rm -f ./test/test
@@ -65,6 +74,11 @@ clean:
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/3_S
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/4_Z
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/5_O
+
+### OTHER ###
+one: one-runner
+	> logs.txt
+	xargs -a ./one-cases.txt -L 1 ./one-runner $($(PL))
 
 check_test:
 	# exclude game over files
