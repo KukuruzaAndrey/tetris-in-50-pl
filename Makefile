@@ -16,10 +16,14 @@ TEST_RUNNERS := $(TEST_DIR)/test $(TEST_DIR)/test_init
 ### PL-S ###  <-- please fill it when add new PL
 C := ./$(SRCS_DIR)/c/core
 JS := ./$(SRCS_DIR)/javascript/core.js
-PL ?= C
-PL_LIST := C JS
-PL_CMPL_LIST := C
+JAVA := ./$(SRCS_DIR)/java/core.class
+PL ?= JAVA
+PL_LIST := C JS JAVA
+PL_CMPL_LIST := C JAVA
+PL_INTRP_LIST := JS JAVA
 
+INTRP_JS := "node $(JS)"
+INTRP_JAVA := "java -cp $(dir $(JAVA)) $(notdir $(JAVA:.class=))"
 
 ##### RULES #####
 all: run
@@ -38,15 +42,18 @@ one-runner: one-runner.c utils.c
 cmpl: $(if $(filter $(PL), $(PL_CMPL_LIST)), $($(PL)))
 
 run: $(RUNNER) cmpl 
-	./$(RUNNER) $($(PL))
+	./$(RUNNER) $(if $(filter $(PL), $(PL_INTRP_LIST)), $(INTRP_$(PL)), $($(PL)))
 
 ### COMPILE PL ### <-- please add new rule when add new compiled PL 
-$(C):
+$(C): $(addsuffix .c,$(C)) $(addsuffix .h,$(C))
 	$(CC) $(CFLAGS) -o $(C) $(addsuffix .c,$(C))
+
+$(JAVA): $(JAVA:.class=.java)
+	javac $(JAVA:.class=.java)
 
 ### TEST ###
 $(TEST_RUNNERS): %: %.c utils.c
-test: $(TEST_RUNNERS) # compile PL
+test: $(TEST_RUNNERS) cmpl
 	# generate tests for rotate counter-clockwise from rotate clockwise tests 
 	# for figures that have two or one rotations (I, S, Z, O) (results are the same, only command is diffirent)
 	# find lines with arguments; change first '3' to '4'; write changes in-place (echo do the trick)
@@ -54,16 +61,19 @@ test: $(TEST_RUNNERS) # compile PL
 	do \
 		cp -r $(TEST_DIR)/$(CASE_DIR)/04_rotate-clockwise/$$d $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise; \
 		for f in $$(find $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/$$d -type f); \
-        do \
+	        do \
 			echo "$$(awk '{if (((NR - 1) % 25 == 0) || ((NR - 2) % 25 == 0)) $$1=4; print $$0}' $$f)" > $$f; \
-        done \
+		done \
 	done
 
 	$(TEST_DIR)/test_init $(TEST_DIR)/initCases/er.txt $($(PL)) && $(TEST_DIR)/test $(TEST_DIR)/$(CASE_DIR)/$(TEST_PATH) $($(PL))
 
 ### CLEAN ###
-clean_C: 
+clean_C:
 	rm -f $(C)
+
+clean_JAVA:
+	rm -f $(dir $(JAVA))/*.class
 
 clean: $(foreach PL, $(PL_CMPL_LIST), clean_$(PL))
 	rm -f $(RUNNER)
@@ -75,6 +85,7 @@ clean: $(foreach PL, $(PL_CMPL_LIST), clean_$(PL))
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/4_Z
 	rm -rf $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/5_O
 
+
 ### OTHER ###
 one: one-runner
 	> logs.txt
@@ -85,7 +96,7 @@ check_test:
 	for f in $$(find $(TEST_DIR)/$(CASE_DIR) -type f ! -name '*#*'); \
 	do awk -f $(TEST_DIR)/check_test.awk $$f; \
 	done
-	
+
 change_tests:
 	for f in $$(find $(TEST_DIR)/$(CASE_DIR)/06_drop -type f); \
 	do \

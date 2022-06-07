@@ -91,7 +91,7 @@ void eval(const char *corePath, char *coreInputs) {
 
   // Concatenate path-to-core and inputs aka tetris state
   snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
-  // printf("%s\n", coreInputs);
+  // printf("runner: args: %s\n", coreArgs);
   // Open pipe with core
   FILE *core = checkError(popen(coreArgs, "r"), coreArgs);
   fprintf(logs, "%s", coreInputs);

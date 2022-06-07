@@ -1,6 +1,11 @@
 .idea/
 
-/**/core
+# C #
+/srcs/c/core
+
+# JAVA #
+srcs/java/*.class
+
 logs.txt
 runner
 test/test
