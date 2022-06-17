@@ -80,11 +80,11 @@ void getFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex
 
 unsigned needNewFigure(const struct state *state) {
   struct coords coords;
-  getFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY + 1);
+  getFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
   for (unsigned i = 0; i < coords.count; ++i) {
     unsigned x = coords.squares[i][0];
     unsigned y = coords.squares[i][1];
-    if (y == BOARD_H || state->board[y][x] != 0) {
+    if (y + 1 == BOARD_H || state->board[y + 1][x] != 0) {
       return 1;
     }
   }

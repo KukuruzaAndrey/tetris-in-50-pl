@@ -93,8 +93,8 @@ const getFigCoords = (figIndex, rotateIndex, offsetX, offsetY) =>
     .filter(([_, y]) => y >= 0) // don't care about segments above top of the screen
 
 const needNewFigure = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
-    const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY + 1)
-    const isOverlap = coords.some((([x, y]) => (y === BOARD_H) || board[y][x] !== 0))
+    const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+    const isOverlap = coords.some((([x, y]) => (y + 1  === BOARD_H) || board[y + 1][x] !== 0))
     return isOverlap
 }
 

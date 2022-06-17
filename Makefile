@@ -49,7 +49,7 @@ $(C): $(addsuffix .c,$(C)) $(addsuffix .h,$(C))
 	$(CC) $(CFLAGS) -o $(C) $(addsuffix .c,$(C))
 
 $(JAVA): $(JAVA:.class=.java)
-	javac $(JAVA:.class=.java)
+	javac -Xlint:unchecked $(JAVA:.class=.java)
 
 ### TEST ###
 $(TEST_RUNNERS): %: %.c utils.c
