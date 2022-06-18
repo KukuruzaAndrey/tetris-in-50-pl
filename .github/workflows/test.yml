@@ -4,19 +4,20 @@ on:
     branches:
       - main
   pull_request:
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run:  |
-          a=git diff --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} \
-	  echo $a
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
+      - run: |
+          a=git diff --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }}
+	  echo $a
+
         uses: actions/checkout@v3
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
