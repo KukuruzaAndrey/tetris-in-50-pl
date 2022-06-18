@@ -1,11 +1,20 @@
-name: GitHub Actions Demo
-on: [push]
+name: TEST
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 jobs:
-  Explore-GitHub-Actions:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - name: Checkout
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run:  |
+          a=git diff --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} \
+	  echo $a
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -15,3 +24,5 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
+#git diff HEAD~5 --name-only | fgrep srcs | awk -F '/' '{print $2}' | tr "[:lower:]" "[:upper:]" | tr '\n' ' '
+#C JAVA JS andrey@andrey-pc:~/dev/tetris-in-50-pl$ export TEST_PL_LIST=$(!!)

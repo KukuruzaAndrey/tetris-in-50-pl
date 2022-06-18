@@ -31,7 +31,7 @@ all: run
 ### ALL PL-S ###
 cmpl_all: $(foreach PL, $(PL_CMPL_LIST), $($(PL)))
 
-TEST_LIST ?= PL_LIST
+TEST_PL_LIST ?= PL_LIST
 test_all: $(TEST_RUNNERS) cmpl_all
 	$(foreach PL, $(TEST_LIST), $(MAKE) test PL=$(PL) &&) true
 
