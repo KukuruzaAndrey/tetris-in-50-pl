@@ -7,4 +7,4 @@ sudo apt-get install -y nodejs
 sudo apt install gcc
 
 # java
-sudo apt install default-jdk
+sudo apt install openjdk-17-jdk openjdk-17-jre

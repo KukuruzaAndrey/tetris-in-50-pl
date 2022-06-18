@@ -41,8 +41,10 @@ one-runner: one-runner.c utils.c
 ### CURRENT PL ###
 cmpl: $(if $(filter $(PL), $(PL_CMPL_LIST)), $($(PL)))
 
+# command to exec core at currnt PL
+run_$(PL) := $(if $(filter $(PL), $(PL_INTRP_LIST)), $(INTRP_$(PL)), $($(PL)))
 run: $(RUNNER) cmpl 
-	./$(RUNNER) $(if $(filter $(PL), $(PL_INTRP_LIST)), $(INTRP_$(PL)), $($(PL)))
+	./$(RUNNER) $(run_$(PL))
 
 ### COMPILE PL ### <-- please add new rule when add new compiled PL 
 $(C): $(addsuffix .c,$(C)) $(addsuffix .h,$(C))
@@ -66,7 +68,7 @@ test: $(TEST_RUNNERS) cmpl
 		done \
 	done
 
-	$(TEST_DIR)/test_init $(TEST_DIR)/initCases/er.txt $($(PL)) && $(TEST_DIR)/test $(TEST_DIR)/$(CASE_DIR)/$(TEST_PATH) $($(PL))
+	$(TEST_DIR)/test_init $(TEST_DIR)/initCases/er.txt $(run_$(PL)) && $(TEST_DIR)/test $(TEST_DIR)/$(CASE_DIR)/$(TEST_PATH) $(run_$(PL))
 
 ### CLEAN ###
 clean_C:

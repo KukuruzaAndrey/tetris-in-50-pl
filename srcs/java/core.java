@@ -1,21 +1,18 @@
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
-// import java.util.Random;
+
 class core {
     public static void main(String args[]) {
-        // System.out.println(Arrays.toString(args));
-        // System.out.println(Arrays.toString(args));
-
         if (args.length == 10) {
             Game game = new Game(args);
             game.update();
-            System.out.println(game.getNextState());
+	    //            System.out.println(game.getNextState());
             System.out.println(game.getNextState());
             System.out.println(game.render());
         } else if (args.length == 1 && args[0].equals("INIT_STATE")) {
             Game game = new Game();
-            // game.update();
+	    //System.out.println(game.getNextState());
 	    System.out.println(game.getNextState());
             System.out.println(game.render());
         }
@@ -136,6 +133,15 @@ class BoardFigure {
         this.offsetY = offsetY;
     }
 
+    public BoardFigure(int figIndex, int color) {
+	this.figIndex = figIndex;
+        this.rotateIndex = 0;
+        this.color = color;
+        this.figure = FIGURES[figIndex];
+        this.offsetX = figIndex == 0 ? 3 : 4;
+        this.offsetY = -1 * figure.rotations[rotateIndex].ofy;
+    }
+
     @Override
     public String toString() {
         return String.valueOf(figIndex) + " " + String.valueOf(rotateIndex) + " " + String.valueOf(color) + " " + String.valueOf(offsetX) +
@@ -180,14 +186,66 @@ class BoardFigure {
     }
     
     public int rotCounterClockwiseIndex() {
-	//	System.out.printf("rotate index - %d\n", rotateIndex);
-	//	System.out.printf("fig index - %d\n", figIndex);
-	//	System.out.printf("FIGURES[figIndex].rotations.length - %d\n", FIGURES[figIndex].rotations.length);
-	//	System.out.printf("new rotate index - %d\n", (rotateIndex == 0) ? FIGURES[figIndex].rotations.length - 1 : rotateIndex - 1);
 	return (rotateIndex == 0) ? FIGURES[figIndex].rotations.length - 1 : rotateIndex - 1;
     }
 }
 
+class SmallBoard {
+    private static final String[] COLORS = {
+	"", // for empty
+	"\033[41m", // BackgroundRed
+	"\033[42m", // BackgroundGreen
+	"\033[43m", // BackgroundYellow
+	"\033[44m", // BackgroundBlue
+	"\033[45m", // BackgroundMagenta
+	"\033[46m", // BackgroundCyan
+	"\033[47m" // BackgroundWhite
+    };
+    private static int NEXT_P_BOARD_W = 6;
+    private static int NEXT_P_BOARD_H = 6;
+    private static String RESET = "\u001B[m";
+    private static String INVERSE = "\u001B[7m";
+    private static String CEIL = "\u2582";
+    private static String FLOOR = INVERSE + "\u2586" + RESET;
+    private static String LEFT = INVERSE + "\u258a" + RESET;
+    private static String RIGHT = "\u258e";
+    private int nextFigIndex;
+    private int nextFigColor;
+    private int score;
+    private BoardFigure bf;
+
+    public SmallBoard(int nextFigIndex, int nextFigColor, int score) {
+	this.nextFigIndex = nextFigIndex;
+	this.nextFigColor = nextFigColor;
+	this.score = score;
+	this.bf = new BoardFigure(nextFigIndex, 0, nextFigColor, nextFigIndex == 5 ? 2 : 1, nextFigIndex == 5 ? 2 : 1);
+    }
+
+    public String renderLine(int y) {
+	if (y > NEXT_P_BOARD_H + 2) return "";
+	if (y == 0) return " " + String.format("%06d", score);
+	if (y == 1) return (new StringBuilder()).append(" ").append(CEIL.repeat(NEXT_P_BOARD_W)).append(" ").toString();
+	if (y == NEXT_P_BOARD_H + 2) return (new StringBuilder()).append(" ").append(FLOOR.repeat(NEXT_P_BOARD_W)).append(" ").toString();
+	
+	StringBuilder line = new StringBuilder();
+	for (int x = 0; x < NEXT_P_BOARD_W; x++) {
+	    final int xx = x;
+	    final int yy = y;
+	    boolean isPiece = Arrays.stream(bf.getCoords()).anyMatch(pair -> {
+		    int xc = pair[0];
+		    int yc = pair[1];
+		    return xc == xx && yc == yy - 2;
+		});
+	    if (isPiece) {
+		line.append(COLORS[nextFigColor]).append(" ").append(RESET);
+	    } else {
+		line.append(" ");
+	    }
+	}
+	
+	return LEFT + line.toString() + RIGHT;
+    }
+}
 
 class Board {
     private static final int BOARD_H = 20;
@@ -199,8 +257,6 @@ class Board {
     private static String LEFT = INVERSE + "\u258a" + RESET;
     private static String RIGHT = "\u258e";
     private static String SPACER = ".";
-    private static int NEXT_P_BOARD_W = 6;
-    private static int NEXT_P_BOARD_H = 6;
 
     private static final String[] COLORS = {
 	"", // for empty
@@ -214,18 +270,21 @@ class Board {
     };
     
     private int[][] board;
+    public SmallBoard sb;
     
-    public Board() {
+    public Board(SmallBoard sb) {
         board = new int[BOARD_H][BOARD_W];
+	this.sb = sb;
     }
     
-    public Board(String strBoard) {
+    public Board(String strBoard, SmallBoard sb) {
         board = new int[BOARD_H][BOARD_W];
         for (int i = 0; i < BOARD_H; i++) {
             for (int j = 0; j < BOARD_W; j++) {
                 board[i][j] = Integer.parseInt(String.valueOf(strBoard.charAt(j + i * BOARD_W)));
             }
         }
+	this.sb = sb;
     }
 
     @Override
@@ -263,7 +322,7 @@ class Board {
 	    });
     }
 
-    public void removeFullLines() {
+    public int removeFullLines() {
 	int countFullLines = 0;
 	for (int y = 0; y < BOARD_H; y++) {
 	    boolean full = Arrays.stream(board[y]).allMatch(c -> c != 0);
@@ -272,16 +331,23 @@ class Board {
 		    board[yy] = board[yy - 1];
 		}
 		board[0] = new int[BOARD_W];
+		countFullLines++;
 	    }
 	}
 
-	if (countFullLines > 0) {
-	    // update score
-	}
+	return countFullLines;
     }
     
-    public boolean endGame() {
-        return false;
+    public boolean endGame(BoardFigure f) {
+        boolean overlap = Arrays.stream(f.getCoords()).anyMatch(pair -> {
+		int x = pair[0];
+		int y = pair[1];
+		return board[y][x] != 0;
+	    });
+	if (overlap) {
+
+	}
+	return overlap;
     }
 
     public boolean canMoveLeft(BoardFigure f) {
@@ -353,7 +419,7 @@ class Board {
         res.append(" ").append(CEIL.repeat(BOARD_W)).append(" \n");
 
         for(int y = 0; y < BOARD_H; y++) {
-            res.append(LEFT).append(renderLine(y)).append(RIGHT).append("\n");
+            res.append(LEFT).append(renderLine(y)).append(RIGHT).append(sb.renderLine(y)).append("\n");
         }
         res.append(" ").append(FLOOR.repeat(BOARD_W)).append(" ");
         
@@ -375,6 +441,7 @@ class Game {
 
     private MOVES move;
     private Board board;
+    private SmallBoard sb;
     private BoardFigure bf;
     private int nextFigIndex;
     private int nextFigColor;
@@ -386,21 +453,22 @@ class Game {
 
     public Game(String[] args) {
         move = MOVES.values()[Integer.parseInt(args[0])];
-        board = new Board(args[1]);
-        bf = new BoardFigure(Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]),
-			     Integer.parseInt(args[5]), Integer.parseInt(args[6]));
+        bf = new BoardFigure(Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]), Integer.parseInt(args[6]));
         nextFigIndex = Integer.parseInt(args[7]);
         nextFigColor = Integer.parseInt(args[8]);
         score = Integer.parseInt(args[9]);
+	sb = new SmallBoard(nextFigIndex, nextFigColor, score);
+        board = new Board(args[1], sb);
     }
 
     public Game() {
         move = MOVES.DOWN;
-        board = new Board();
         bf = new BoardFigure();
         nextFigIndex = BoardFigure.getNextFigIndex();
         nextFigColor = BoardFigure.getNextFigColor();
         score = 0;
+	sb = new SmallBoard(nextFigIndex, nextFigColor, score);
+        board = new Board(sb);
     }
     
     public void update() {
@@ -409,10 +477,15 @@ class Game {
 	case DOWN:
 	    if (board.needNewFigure(bf)) {
 		board.addFigure(bf);
-		board.removeFullLines();
-		bf = new BoardFigure();
-		if (board.endGame()) {
-                        
+		int fl = board.removeFullLines();
+		if (fl > 0) score += SCORES[fl - 1];
+		bf = new BoardFigure(nextFigIndex, nextFigColor);
+		nextFigIndex = BoardFigure.getNextFigIndex();
+		nextFigColor = BoardFigure.getNextFigColor();
+		board.sb = new SmallBoard(nextFigIndex, nextFigColor, score);
+		if (board.endGame(bf)) {
+		    System.out.println("Game over!");
+		    System.exit(0);  
 		}
 		break;
 	    }
@@ -434,7 +507,6 @@ class Game {
 	    }
 	    break;
 	case ROTATE_COUNTER_CLOCKWISE:
-	    // System.out.println("r c c\n");	    
 	    if (board.canRotateCounterClockwise(bf)) {
 		bf.rotateCounterClockwise();
 	    }
@@ -442,10 +514,15 @@ class Game {
 	case DROP:
 	    board.drop(bf);
 	    board.addFigure(bf);
-	    board.removeFullLines();
-	    bf = new BoardFigure();
-	    if (board.endGame()) {
-		
+	    int fl = board.removeFullLines();
+	    if (fl > 0) score += SCORES[fl - 1];
+	    bf = new BoardFigure(nextFigIndex, nextFigColor);
+	    nextFigIndex = BoardFigure.getNextFigIndex();
+	    nextFigColor = BoardFigure.getNextFigColor();
+	    board.sb = new SmallBoard(nextFigIndex, nextFigColor, score);
+	    if (board.endGame(bf)) {
+		System.out.println("Game over!");
+		System.exit(0);
 	    }
 	    break;
         }
