@@ -2,7 +2,7 @@ name: TEST
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
 
 jobs:
@@ -24,7 +24,4 @@ jobs:
           echo $test_pl_list
           export TEST_PL_LIST=$test_pl_list
           make test_all
-          
 
-#git diff HEAD~5 --name-only | fgrep srcs | awk -F '/' '{print $2}' | tr "[:lower:]" "[:upper:]" | tr '\n' ' '
-#C JAVA JS andrey@andrey-pc:~/dev/tetris-in-50-pl$ export TEST_PL_LIST=$(!!)
