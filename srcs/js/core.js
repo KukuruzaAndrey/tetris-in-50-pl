@@ -258,7 +258,7 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
         } else {
           line += ' '
         }
-      }
+    }
     return LEFT + line + RIGHT
   }
   
