@@ -20,6 +20,7 @@
 char coreInputs[ARGS_SIZE];
 char coreArgs[ARGS_SIZE + 30];
 char *bucket;
+unsigned verbose = 0;
 
 int (*pstrcmp)(const char *, const char *);
 
@@ -138,9 +139,7 @@ void run(const char *testFileName, const char *corePath) {
       printf("%s:%d - %sPassed%s\n", testFileName, file_line, GREEN, RESET);
     } else {
       printf("%s:%d - %sFailed%s\n", testFileName, file_line, RED, RESET);
-      printf("strlen(actualNextStepResult) - %lu   strlen(expectedNextStepResult) - %lu\n",
-             strlen(actualNextStepResult),
-             strlen(expectedNextStepResult));
+      printf("strlen(actualNextStepResult) - %lu   strlen(expectedNextStepResult) - %lu\n", strlen(actualNextStepResult), strlen(expectedNextStepResult));
       printf("Case:\n%s\n", coreInputs);
       printf("Actual Result:\n%s\n", actualNextStepResult);
       printf("Expected Result:\n%s\n\n", expectedNextStepResult);
@@ -155,8 +154,8 @@ void run(const char *testFileName, const char *corePath) {
     if (!gameover) {
       result = pstrcmp(actualRenderResult, expectedRenderResult);
       if (result == 0) {
-        printf("%s:%d - %sPassed%s\n", testFileName, file_line, GREEN, RESET);
-        printf("%s\n", actualRenderResult);
+        if (verbose) printf("%s:%d - %sPassed%s\n", testFileName, file_line, GREEN, RESET);
+        if (verbose) printf("%s\n", actualRenderResult);
       } else {
         printf("%s:%d - %sFailed%s\n", testFileName, file_line, RED, RESET);
         printf("strlen(actualRenderResult) - %lu   strlen(expectedRenderResult) - %lu\n", strlen(actualRenderResult),
@@ -222,6 +221,10 @@ int main(int argc, char **argv) {
   if (argc < 3) {
     printf("%s\n", "provide arguments");
     return 1;
+  }
+
+  if (argc == 4 && argv[3][0] == '-' && argv[3][1] == 'v') {
+    verbose = 1;
   }
 
   if (isDirectory(argv[1])) {

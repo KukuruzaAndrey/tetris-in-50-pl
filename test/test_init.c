@@ -19,11 +19,15 @@
 #define YELLOW "\033[33m"
 #define RESET "\x1B[m"
 
+unsigned verbose = 0;
+
 char coreInputs[ARGS_SIZE];
 char coreArgs[ARGS_SIZE + 30];
 char *bucket;
 char renderER[PIECE_COUNT][FRAME_BUFFER_SIZE];
 char nextStepER[PIECE_COUNT][ARGS_SIZE];
+
+
 
 // compare strings, but when meet '?' in s2 - skip check equality appropriate chars.
 // compare strings, but when meet '$' in s2 - skip check equality all next chars up to '\n' in s1.
@@ -96,14 +100,13 @@ void run(const char* corePath) {
       printf("Actual Result:\n%s\n", actualNextStepResult);
       exit(1);
     } else {
-      
       printf("%s:%d - %sPassed%s\n", "INIT_STATE", cur, GREEN, RESET);
-      printf("Actual Result:\n%s\n", actualNextStepResult);
+      if (verbose) printf("Actual Result:\n%s\n", actualNextStepResult);
     }
     int result = strcmpWithWildcard(actualRenderResult, renderER[cur]);
     if (result == 0) {
       printf("%s - %sPassed%s\n", "INIT_STATE", GREEN, RESET);
-      printf("%s\n", actualRenderResult);
+      if (verbose) printf("%s\n", actualRenderResult);
     } else {
       printf("%s - %sFailed%s\n", "INIT_STATE", RED, RESET);
       printf("strlen(actualRenderResult) - %lu   strlen(renderER[cur]) - %lu\n", strlen(actualRenderResult),
@@ -140,9 +143,13 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if (argc == 4 && argv[3][0] == '-' && argv[3][1] == 'v') {
+    verbose = 1;
+  }
+
   FILE *erFP = checkError(fopen(argv[1], "r"), argv[1]);
   readER(erFP);
   run(argv[2]);
-  printf("%s%s%s\n", GREEN, "SUCCESS", RESET);
+  // printf("%s%s%s\n", GREEN, "SUCCESS", RESET);
   return EXIT_SUCCESS;
 }
