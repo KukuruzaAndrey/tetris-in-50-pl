@@ -1,4 +1,4 @@
-.PHONY: test
+.PHONY: test test_all
 
 ##### DEFINES #####
 
@@ -15,7 +15,7 @@ TEST_RUNNERS := $(TEST_DIR)/test $(TEST_DIR)/test_init
 
 ### PL-S ###  <-- please fill it when add new PL
 C := ./$(SRCS_DIR)/c/core
-JS := ./$(SRCS_DIR)/javascript/core.js
+JS := ./$(SRCS_DIR)/js/core.js
 JAVA := ./$(SRCS_DIR)/java/core.class
 PL ?= JAVA
 PL_LIST := C JS JAVA
@@ -33,7 +33,7 @@ cmpl_all: $(foreach PL, $(PL_CMPL_LIST), $($(PL)))
 
 TEST_PL_LIST ?= PL_LIST
 test_all: $(TEST_RUNNERS) cmpl_all
-	$(foreach PL, $(TEST_LIST), $(MAKE) test PL=$(PL) &&) true
+	$(foreach PL, $(TEST_PL_LIST), $(MAKE) test PL=$(PL) &&) true
 
 ### RUNNNER ###
 $(RUNNER): runner.c utils.c
