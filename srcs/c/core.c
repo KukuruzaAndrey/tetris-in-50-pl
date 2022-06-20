@@ -5,6 +5,13 @@
 #include "stdlib.h"
 #include "core.h"
 
+#define FOR_EACH_COORDS(coords) \
+  for (unsigned i = 0; i < (coords)->count; ++i) {	\
+    unsigned x = (coords)->squares[i][0];		\
+    unsigned y = (coords)->squares[i][1];		\
+
+#define FOR_EACH_COORDS_END }
+
 unsigned randomInt(void) {
   unsigned rand;
   FILE *fp;
@@ -60,15 +67,20 @@ void parseState(char **argv, struct state *dest) {
   dest->score = atoi(argv[10]);
 }
 
-void getFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex, int offsetX, int offsetY) {
+unsigned getFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex, int offsetX, int offsetY) {
   unsigned count = 0;
   for (unsigned i = 0; i < 4; ++i) {
-    // check overflow !
-    unsigned y = FIGURES[figIndex].rotations[rotateIndex].squares[i][1] + offsetY +
+    int y = FIGURES[figIndex].rotations[rotateIndex].squares[i][1] + offsetY +
                  FIGURES[figIndex].rotations[rotateIndex].ofy;
-    unsigned x = FIGURES[figIndex].rotations[rotateIndex].squares[i][0] + offsetX +
+    int x = FIGURES[figIndex].rotations[rotateIndex].squares[i][0] + offsetX +
                  FIGURES[figIndex].rotations[rotateIndex].ofx;
-    if (y > 20)
+
+    // illegal coordinates
+    if (y >= BOARD_H || x < 0 || x >= BOARD_W)
+      return 0;
+
+    // don't care about segments above top of the screen
+    if (y < 0)
       continue;
 
     coords->squares[count][0] = x;
@@ -76,19 +88,16 @@ void getFigCoords(struct coords *coords, unsigned figIndex, unsigned rotateIndex
     count += 1;
   }
   coords->count = count;
+  return 1;
 }
 
-unsigned needNewFigure(const struct state *state) {
-  struct coords coords;
-  getFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
-  for (unsigned i = 0; i < coords.count; ++i) {
-    unsigned x = coords.squares[i][0];
-    unsigned y = coords.squares[i][1];
-    if (y + 1 == BOARD_H || state->board[y + 1][x] != 0) {
-      return 1;
+unsigned boardCellsFree(const struct coords *coords, const unsigned board[BOARD_H][BOARD_W]) {
+  FOR_EACH_COORDS(coords)
+    if (board[y][x] != 0) {
+      return 0;
     }
-  }
-  return 0;
+  FOR_EACH_COORDS_END
+  return 1;
 }
 
 void removeFullLines(struct state *state) {
@@ -131,89 +140,66 @@ void createNewFig(struct state *state) {
   state->nextFigColor = getRandomIntInclusive(1, COLORS_COUNT - 1);
 }
 
-void checkEndGame(const struct state *state) {
-  struct coords newCoords;
-  getFigCoords(&newCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
+unsigned canPlace(const unsigned board[BOARD_H][BOARD_W], unsigned figIndex, unsigned rotateIndex, int offsetX, int offsetY) {
+  struct coords coords;
+  unsigned legal = getFigCoords(&coords, figIndex, rotateIndex, offsetX, offsetY);
+  return legal && boardCellsFree(&coords, board);
+}
 
-  for (unsigned i = 0; i < newCoords.count; ++i) {
-    unsigned x = newCoords.squares[i][0];
-    unsigned y = newCoords.squares[i][1];
-    if (state->board[y][x] != 0) {
-      printf("%s\n", "Game over!");
-      exit(0);
-    }
-  }
+unsigned needNewFigure(const struct state *state) {
+  return !canPlace(state->board, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY + 1);
+}
+
+unsigned checkEndGame(const struct state *state) {
+  // actually we can use boardCellsFree here
+  return !canPlace(state->board, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
 }
 
 unsigned canMoveLeft(const struct state *state) {
-  if (state->offsetX + FIGURES[state->figIndex].rotations[state->rotateIndex].ofx <= 0)
-    return 0;
-
-  struct coords oldCoords;
-  getFigCoords(&oldCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
-  for (unsigned i = 0; i < oldCoords.count; ++i) {
-    unsigned x = oldCoords.squares[i][0];
-    unsigned y = oldCoords.squares[i][1];
-    if (state->board[y][x - 1] != 0) {
-      return 0;
-    }
-  }
-  return 1;
+  return canPlace(state->board, state->figIndex, state->rotateIndex, state->offsetX - 1, state->offsetY);
 }
 
 unsigned canMoveRight(const struct state *state) {
-  if (state->offsetX + FIGURES[state->figIndex].rotations[state->rotateIndex].w +
-      FIGURES[state->figIndex].rotations[state->rotateIndex].ofx >= BOARD_W)
-    return 0;
-
-  struct coords oldCoords;
-  getFigCoords(&oldCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
-  for (unsigned i = 0; i < oldCoords.count; ++i) {
-    unsigned x = oldCoords.squares[i][0];
-    unsigned y = oldCoords.squares[i][1];
-    if (state->board[y][x + 1] != 0) {
-      return 0;
-    }
-  }
-  return 1;
+  return canPlace(state->board, state->figIndex, state->rotateIndex, state->offsetX + 1, state->offsetY);
 }
 
-unsigned canRotate(const unsigned board[BOARD_H][BOARD_W], const unsigned figIndex, const unsigned newRotIndex,
-                   const int offsetX, const int offsetY) {
-  struct coords rotateFigCoords;
-  getFigCoords(&rotateFigCoords, figIndex, newRotIndex, offsetX, offsetY);
-  for (unsigned i = 0; i < rotateFigCoords.count; ++i) {
-    unsigned x = rotateFigCoords.squares[i][0];
-    unsigned y = rotateFigCoords.squares[i][1];
-    if (x < 0 || x >= BOARD_W || y >= BOARD_H || board[y][x] != 0) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
-int getOffsetAtDrop(struct state *state) {
+void drop(struct state *state) {
   while (!needNewFigure(state)) {
     state->offsetY += 1;
   }
-  return state->offsetY;
+}
+
+void addPieceToBoard(struct state *state) {
+  struct coords coords;
+  getFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
+  FOR_EACH_COORDS(&coords)
+    state->board[y][x] = state->color;
+  FOR_EACH_COORDS_END
+}
+
+void clearPieceAtBoard(struct state *state) {
+  struct coords coords;
+  getFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
+  FOR_EACH_COORDS(&coords)
+    state->board[y][x] = 0;
+  FOR_EACH_COORDS_END
+}
+
+void processNewFigure(struct state *state) {
+  addPieceToBoard(state);
+  removeFullLines(state);
+  createNewFig(state);
+  if (checkEndGame(state)) {
+    printf("%s\n", "Game over!");
+    exit(0);
+  }
 }
 
 void update(struct state *state) {
   switch (state->move) {
     case MOVE_DOWN:
       if (needNewFigure(state)) {
-        struct coords oldCoords;
-        getFigCoords(&oldCoords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
-        for (unsigned i = 0; i < oldCoords.count; ++i) {
-          unsigned x = oldCoords.squares[i][0];
-          unsigned y = oldCoords.squares[i][1];
-          state->board[y][x] = state->color;
-        }
-
-        removeFullLines(state);
-        createNewFig(state);
-        checkEndGame(state);
+	processNewFigure(state);
         break;
       }
       state->offsetY += 1;
@@ -230,37 +216,27 @@ void update(struct state *state) {
       break;
     case MOVE_ROTATE_CLOCKWISE: {
       unsigned newRotIndex = (state->rotateIndex == FIGURES[state->figIndex].count - 1) ? 0 : state->rotateIndex + 1;
-      if (canRotate(state->board, state->figIndex, newRotIndex, state->offsetX, state->offsetY)) {
+      if (canPlace(state->board, state->figIndex, newRotIndex, state->offsetX, state->offsetY)) {
         state->rotateIndex = newRotIndex;
       }
       break;
     }
     case MOVE_ROTATE_COUNTER_CLOCKWISE: {
       unsigned newRotIndex = (state->rotateIndex == 0) ? FIGURES[state->figIndex].count - 1 : state->rotateIndex - 1;
-      if (canRotate(state->board, state->figIndex, newRotIndex, state->offsetX, state->offsetY)) {
+      if (canPlace(state->board, state->figIndex, newRotIndex, state->offsetX, state->offsetY)) {
         state->rotateIndex = newRotIndex;
       }
       break;
     }
     case MOVE_DROP: {
-      int newOffsetY = getOffsetAtDrop(state);
-      struct coords coords;
-      getFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, newOffsetY);
-      for (unsigned i = 0; i < coords.count; ++i) {
-        unsigned x = coords.squares[i][0];
-        unsigned y = coords.squares[i][1];
-        state->board[y][x] = state->color;
-      }
-
-      removeFullLines(state);
-      createNewFig(state);
-      checkEndGame(state);
+      drop(state);
+      processNewFigure(state);
       break;
     }
   }
 }
 
-char *renderLine(char *bucket, const unsigned y, const unsigned board[BOARD_H][BOARD_W]) {
+char *renderLine(char *bucket, unsigned y, const unsigned board[BOARD_H][BOARD_W]) {
   for (unsigned x = 0; x < BOARD_W; x++) {
     if (board[y][x] != 0) {
       bucket = stpcpy(bucket, COLORS[board[y][x]]);
@@ -274,7 +250,7 @@ char *renderLine(char *bucket, const unsigned y, const unsigned board[BOARD_H][B
 }
 
 char *
-renderNextPieceLine(char *bucket, const unsigned y, const struct coords coords, unsigned nextFigColor, unsigned score) {
+renderNextPieceLine(char *bucket, unsigned y, const struct coords coords, unsigned nextFigColor, unsigned score) {
   if (y > NEXT_P_BOARD_H + 2) return bucket;
   if (y == 0) {
     bucket = stpcpy(bucket, " ");
@@ -326,13 +302,7 @@ renderNextPieceLine(char *bucket, const unsigned y, const struct coords coords, 
 void render(char *res, struct state *state) {
 
   // add piece to board for simplifying render
-  struct coords coords;
-  getFigCoords(&coords, state->figIndex, state->rotateIndex, state->offsetX, state->offsetY);
-  for (unsigned i = 0; i < coords.count; ++i) {
-    unsigned x = coords.squares[i][0];
-    unsigned y = coords.squares[i][1];
-    state->board[y][x] = state->color;
-  }
+  addPieceToBoard(state);
 
   char *bucket = stpcpy(res, " ");
   for (unsigned x = 0; x < BOARD_W; x++) {
@@ -356,12 +326,7 @@ void render(char *res, struct state *state) {
   }
   bucket = stpcpy(bucket, " ");
 
-  for (unsigned i = 0; i < coords.count; ++i) {
-    unsigned x = coords.squares[i][0];
-    unsigned y = coords.squares[i][1];
-    state->board[y][x] = 0;
-  }
-
+  clearPieceAtBoard(state);
 }
 
 int main(int argc, char **argv) {
@@ -382,7 +347,6 @@ int main(int argc, char **argv) {
   } else {
     printf("argv[0] - %s\n", argv[0]);
     printf("argv[1] - %s\n", argv[1]);
-
     puts("incorrect arguments");
     exit(1);
   }

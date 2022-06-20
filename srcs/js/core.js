@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const BOARD_W = 10
 const BOARD_H = 20
 const SCORES = [10, 30, 60, 100]
@@ -25,37 +23,37 @@ const COLORS = [
 
 const FIGURES = [
   [ // I
-    { squares: [[0, 0], [1, 0], [2, 0], [3, 0]], h: 1, w: 4, ofx: 0, ofy: 2 },
-    { squares: [[0, 0], [0, 1], [0, 2], [0, 3]], h: 4, w: 1, ofx: 2, ofy: 0 },
+    { squares: [[0, 0], [1, 0], [2, 0], [3, 0]], ofx: 0, ofy: 2 },
+    { squares: [[0, 0], [0, 1], [0, 2], [0, 3]], ofx: 2, ofy: 0 },
   ],
   [ // L
-    { squares: [[0, 0], [1, 0], [2, 0], [0, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
-    { squares: [[0, 0], [1, 0], [1, 1], [1, 2]], h: 3, w: 2, ofx: 0, ofy: 0 },
-    { squares: [[0, 1], [1, 1], [2, 1], [2, 0]], h: 2, w: 3, ofx: 0, ofy: 0 },
-    { squares: [[0, 0], [0, 1], [0, 2], [1, 2]], h: 3, w: 2, ofx: 1, ofy: 0 },
+    { squares: [[0, 0], [1, 0], [2, 0], [0, 1]], ofx: 0, ofy: 1 },
+    { squares: [[0, 0], [1, 0], [1, 1], [1, 2]], ofx: 0, ofy: 0 },
+    { squares: [[0, 1], [1, 1], [2, 1], [2, 0]], ofx: 0, ofy: 0 },
+    { squares: [[0, 0], [0, 1], [0, 2], [1, 2]], ofx: 1, ofy: 0 },
   ],
   [ // J
-    { squares: [[0, 0], [1, 0], [2, 0], [2, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
-    { squares: [[1, 0], [1, 1], [1, 2], [0, 2]], h: 3, w: 2, ofx: 0, ofy: 0 },
-    { squares: [[0, 0], [0, 1], [1, 1], [2, 1]], h: 2, w: 3, ofx: 0, ofy: 0 },
-    { squares: [[0, 0], [1, 0], [0, 1], [0, 2]], h: 3, w: 2, ofx: 1, ofy: 0 },
+    { squares: [[0, 0], [1, 0], [2, 0], [2, 1]], ofx: 0, ofy: 1 },
+    { squares: [[1, 0], [1, 1], [1, 2], [0, 2]], ofx: 0, ofy: 0 },
+    { squares: [[0, 0], [0, 1], [1, 1], [2, 1]], ofx: 0, ofy: 0 },
+    { squares: [[0, 0], [1, 0], [0, 1], [0, 2]], ofx: 1, ofy: 0 },
   ],
   [ // S
-    { squares: [[1, 0], [2, 0], [0, 1], [1, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
-    { squares: [[0, 0], [0, 1], [1, 1], [1, 2]], h: 3, w: 2, ofx: 1, ofy: 0 },
+    { squares: [[1, 0], [2, 0], [0, 1], [1, 1]], ofx: 0, ofy: 1 },
+    { squares: [[0, 0], [0, 1], [1, 1], [1, 2]], ofx: 1, ofy: 0 },
   ],
   [ // Z
-    { squares: [[0, 0], [1, 0], [1, 1], [2, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
-    { squares: [[0, 1], [1, 0], [1, 1], [0, 2]], h: 3, w: 2, ofx: 1, ofy: 0 },
+    { squares: [[0, 0], [1, 0], [1, 1], [2, 1]], ofx: 0, ofy: 1 },
+    { squares: [[0, 1], [1, 0], [1, 1], [0, 2]], ofx: 1, ofy: 0 },
   ],
   [ // O
-    { squares: [[0, 0], [0, 1], [1, 1], [1, 0]], h: 2, w: 2, ofx: 0, ofy: 0 },
+    { squares: [[0, 0], [0, 1], [1, 1], [1, 0]], ofx: 0, ofy: 0 },
   ],
   [ // T
-    { squares: [[0, 0], [1, 0], [2, 0], [1, 1]], h: 2, w: 3, ofx: 0, ofy: 1 },
-    { squares: [[1, 0], [0, 1], [1, 1], [1, 2]], h: 3, w: 2, ofx: 0, ofy: 0 },
-    { squares: [[1, 0], [0, 1], [1, 1], [2, 1]], h: 2, w: 3, ofx: 0, ofy: 0 },
-    { squares: [[0, 0], [0, 1], [0, 2], [1, 1]], h: 3, w: 2, ofx: 1, ofy: 0 },
+    { squares: [[0, 0], [1, 0], [2, 0], [1, 1]], ofx: 0, ofy: 1 },
+    { squares: [[1, 0], [0, 1], [1, 1], [1, 2]], ofx: 0, ofy: 0 },
+    { squares: [[1, 0], [0, 1], [1, 1], [2, 1]], ofx: 0, ofy: 0 },
+    { squares: [[0, 0], [0, 1], [0, 2], [1, 1]], ofx: 1, ofy: 0 },
   ]
 ]
 
@@ -87,16 +85,19 @@ const init = () => {
   return { move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }
 }
 
-const getFigCoords = (figIndex, rotateIndex, offsetX, offsetY) =>
-  FIGURES[figIndex][rotateIndex].squares
-    .map(([x, y]) => [x + offsetX + FIGURES[figIndex][rotateIndex].ofx, y + offsetY + FIGURES[figIndex][rotateIndex].ofy])
-    .filter(([_, y]) => y >= 0) // don't care about segments above top of the screen
-
-const needNewFigure = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
-    const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    const isOverlap = coords.some((([x, y]) => (y + 1  === BOARD_H) || board[y + 1][x] !== 0))
-    return isOverlap
+const getFigCoords = (figIndex, rotateIndex, offsetX, offsetY) => {
+  let coords = FIGURES[figIndex][rotateIndex].squares
+      .map(([x, y]) => [x + offsetX + FIGURES[figIndex][rotateIndex].ofx, y + offsetY + FIGURES[figIndex][rotateIndex].ofy])
+  // first we need check is fig position is legal
+  const illegal = coords.some(([x, y]) => (y >= BOARD_H || x < 0 || x >= BOARD_W))
+  if (illegal)
+    return null
+  // and only then filter segments above top
+  coords = coords.filter(([_, y]) => y >= 0)
+  return coords
 }
+
+const boardCellsFree = (coords, board) => coords.every(([x, y]) => board[y][x] === 0)
 
 const removeFullLines = state => {
   const boardWithoutFillLines = state.board.filter(line => line.some(c => c === 0))
@@ -128,89 +129,100 @@ const createNewFig = state => {
   state.nextFigColor = getRandomIntInclusive(1, COLORS.length - 1)
 }
 
-const checkEndGame = state => {
-    const newCoords = getFigCoords(state.figIndex, state.rotateIndex, state.offsetX, state.offsetY)
-    if (newCoords.some((([x, y]) => state.board[y][x] !== 0))) {
-        console.log('Game over!')
-        process.exit()
-    }
+const canPlace = (board, figIndex, rotateIndex, offsetX, offsetY) => {
+  const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+  return coords && boardCellsFree(coords, board)
+}
+
+const checkEndGame = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+  return !canPlace(board, figIndex, rotateIndex, offsetX, offsetY)
+}
+
+const needNewFigure = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+  return !canPlace(board, figIndex, rotateIndex, offsetX, offsetY + 1)
 }
 
 const canMoveLeft = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
-    const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    return ((offsetX + FIGURES[figIndex][rotateIndex].ofx > 0) && oldCoords.every(([x, y]) => board[y][x - 1] === 0))
+  return canPlace(board, figIndex, rotateIndex, offsetX - 1, offsetY)
 }
 const canMoveRight = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
-    const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-    return ((offsetX + FIGURES[figIndex][rotateIndex].w + FIGURES[figIndex][rotateIndex].ofx < BOARD_W) && oldCoords.every(([x, y]) => board[y][x + 1] === 0))     
-}
-const canRotate = (board, figIndex, newRotIndex, offsetX, offsetY) => {
-  const rotateFigCoords = getFigCoords(figIndex, newRotIndex, offsetX, offsetY)
-  return rotateFigCoords.every(([x, y]) => x >= 0 && x < BOARD_W && y < BOARD_H && board[y][x] === 0)
+  return canPlace(board, figIndex, rotateIndex, offsetX + 1, offsetY)
 }
 
-const getOffsetAtDrop = state => {
-    while (!needNewFigure(state)) {
-        state.offsetY += 1
-    }
-    return state.offsetY
+
+const drop = state => {
+  while (!needNewFigure(state)) {
+    state.offsetY += 1
+  }
+}
+
+const addPieceToBoard = ({board, figIndex, color, rotateIndex, offsetX, offsetY}) => {
+  const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+  for (const [x, y] of coords) {
+    board[y][x] = color
+  }
+}
+
+const clearPieceAtBoard = ({board, figIndex, rotateIndex, offsetX, offsetY}) => {
+  const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
+  for (const [x, y] of coords) {
+    board[y][x] = 0
+  }
+}
+
+const processNewFigure = state => {
+  addPieceToBoard(state)
+  removeFullLines(state)
+  createNewFig(state)
+  if (checkEndGame(state)) {
+    console.log('Game over!')
+    process.exit()
+  }
 }
 
 const update = (state) => {
   ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score } = state)
-    switch (move) {
-      case MOVES.DOWN:
-        if (needNewFigure(state)) {
-          const oldCoords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-          for (const [x, y] of oldCoords) {
-            board[y][x] = color
-          }
-          removeFullLines(state)
-          createNewFig(state)
-          checkEndGame(state)
-          return state
-        }
-        state.offsetY += 1
-        return state
-      case MOVES.LEFT:
-        if (canMoveLeft(state)) {
-            state.offsetX -= 1
-            return state
-        }
-        break
-      case MOVES.RIGHT:
-        if (canMoveRight(state)) {
-            state.offsetX += 1
-            return state
-        }
-        break
-      case MOVES.ROTATE_CLOCKWISE: {
-        const newRotIndex = rotateIndex === FIGURES[figIndex].length - 1 ? 0 : rotateIndex + 1
-        if (canRotate(board, figIndex, newRotIndex, offsetX, offsetY)) {
-            state.rotateIndex = newRotIndex
-            return state
-        }
-        break
-      }
-      case MOVES.ROTATE_COUNTER_CLOCKWISE: {
-        const newRotIndex = rotateIndex === 0 ? FIGURES[figIndex].length - 1 : rotateIndex - 1
-        if (canRotate(board, figIndex, newRotIndex, offsetX, offsetY)) {
-            state.rotateIndex = newRotIndex
-            return state
-        }
-        break
-      }
-      case MOVES.DROP:
-        const newOffsetY = getOffsetAtDrop(state)
-        const coords = getFigCoords(figIndex, rotateIndex, offsetX, newOffsetY)
-        for (const [x, y] of coords) {
-            board[y][x] = color
-        }
-        removeFullLines(state)
-        createNewFig(state)
-        checkEndGame(state)
-        return state
+  switch (move) {
+  case MOVES.DOWN:
+    if (needNewFigure(state)) {
+      processNewFigure(state)
+      return state
     }
+    state.offsetY += 1
+    return state
+  case MOVES.LEFT:
+    if (canMoveLeft(state)) {
+      state.offsetX -= 1
+      return state
+    }
+    break
+  case MOVES.RIGHT:
+    if (canMoveRight(state)) {
+      state.offsetX += 1
+      return state
+    }
+    break
+  case MOVES.ROTATE_CLOCKWISE: {
+    const newRotIndex = rotateIndex === FIGURES[figIndex].length - 1 ? 0 : rotateIndex + 1
+    if (canPlace(board, figIndex, newRotIndex, offsetX, offsetY)) {
+      state.rotateIndex = newRotIndex
+      return state
+    }
+    break
+  }
+  case MOVES.ROTATE_COUNTER_CLOCKWISE: {
+    const newRotIndex = rotateIndex === 0 ? FIGURES[figIndex].length - 1 : rotateIndex - 1
+    if (canPlace(board, figIndex, newRotIndex, offsetX, offsetY)) {
+      state.rotateIndex = newRotIndex
+      return state
+    }
+    break
+  }
+  case MOVES.DROP:
+    drop(state)
+    processNewFigure(state)
+    return state
+  }
 
   return state
 }
@@ -229,23 +241,20 @@ const NEXT_P_BOARD_H = 6
 const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, nextFigIndex, nextFigColor, score }) => {
 
   // add piece to board for simplifying render
-  const coords = getFigCoords(figIndex, rotateIndex, offsetX, offsetY)
-  for (const [x, y] of coords) {
-    board[y][x] = color
-  }
+  addPieceToBoard({board, figIndex, rotateIndex, color, offsetX, offsetY})
 
   const renderLine = y => {
     let line = ''
-     for (let x = 0; x < BOARD_W; x++) {
-       if (board[y][x] !== 0) {
-         line += COLORS[board[y][x]] + ' ' + RESET
-       } else {
-         line += (x % 2 === 0) ? ' ' : SPACER
-       }
-     }
-     return line
+    for (let x = 0; x < BOARD_W; x++) {
+      if (board[y][x] !== 0) {
+        line += COLORS[board[y][x]] + ' ' + RESET
+      } else {
+        line += (x % 2 === 0) ? ' ' : SPACER
+      }
+    }
+    return line
   }
-  const nextFigCoords = getFigCoords(nextFigIndex, 0, nextFigIndex === 5 ? 2 : 1, nextFigIndex === 5 ? 2 : 1) 
+  const coords = getFigCoords(nextFigIndex, 0, nextFigIndex === 5 ? 2 : 1, nextFigIndex === 5 ? 2 : 1)
   const renderNextPieceLine = y => {
     if (y > NEXT_P_BOARD_H + 2) return ''
     if (y === 0) return ' ' + String(score).padStart(6, '0')
@@ -253,11 +262,11 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
     if (y === NEXT_P_BOARD_H + 2) return ` ${FLOOR.repeat(NEXT_P_BOARD_W)} `
     let line = ''
     for (let x = 0; x < NEXT_P_BOARD_W; x++) {
-        if (nextFigCoords.some(([xc, yc]) => xc === x && yc === y - 2)) {
-          line += COLORS[nextFigColor] + ' ' + RESET
-        } else {
-          line += ' '
-        }
+      if (coords.some(([xc, yc]) => xc === x && yc === y - 2)) {
+        line += COLORS[nextFigColor] + ' ' + RESET
+      } else {
+        line += ' '
+      }
     }
     return LEFT + line + RIGHT
   }
@@ -269,29 +278,27 @@ const render = ({ move, board, figIndex, rotateIndex, color, offsetX, offsetY, n
   }
   res += ` ${FLOOR.repeat(BOARD_W)} `
 
-  for (const [x, y] of coords) {
-    board[y][x] = 0
-  }
+  clearPieceAtBoard({board, figIndex, rotateIndex, offsetX, offsetY})
 
   return res
 }
 
 const stateToStr =
-  ({
-     move,
-     board,
-     figIndex,
-     rotateIndex,
-     color,
-     offsetX,
-     offsetY,
-     nextFigIndex,
-     nextFigColor,
-     score
-   }) => {
-    const strBoard = board.map(row => row.join('')).join('')
-    return `${move} ${strBoard} ${figIndex} ${rotateIndex} ${color} ${offsetX} ${offsetY} ${nextFigIndex} ${nextFigColor} ${score}`
-  }
+      ({
+        move,
+        board,
+        figIndex,
+        rotateIndex,
+        color,
+        offsetX,
+        offsetY,
+        nextFigIndex,
+        nextFigColor,
+        score
+      }) => {
+        const strBoard = board.map(row => row.join('')).join('')
+        return `${move} ${strBoard} ${figIndex} ${rotateIndex} ${color} ${offsetX} ${offsetY} ${nextFigIndex} ${nextFigColor} ${score}`
+      }
 
 const parseState = () => {
   const move = parseInt(process.argv[2])
