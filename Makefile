@@ -31,8 +31,8 @@ all: run
 ### ALL PL-S ###
 cmpl_all: $(foreach PL, $(PL_CMPL_LIST), $($(PL)))
 
-TEST_PL_LIST ?= PL_LIST
-test_all: $(TEST_RUNNERS) cmpl_all
+TEST_PL_LIST ?= $(PL_LIST)
+test_all: $(TEST_RUNNERS) cmpl_all | $(ROTATE_COMMON)
 	$(foreach PL, $(TEST_PL_LIST), $(MAKE) test PL=$(PL) &&) true
 
 ### RUNNNER ###
@@ -56,19 +56,20 @@ $(JAVA): $(JAVA:.class=.java)
 
 ### TEST ###
 $(TEST_RUNNERS): %: %.c utils.c
-test: $(TEST_RUNNERS) cmpl
-	# generate tests for rotate counter-clockwise from rotate clockwise tests 
-	# for figures that have two or one rotations (I, S, Z, O) (results are the same, only command is diffirent)
-	# find lines with arguments; change first '3' to '4'; write changes in-place (echo do the trick)
-	for d in 0_I 3_S 4_Z 5_O; \
-	do \
-		cp -r $(TEST_DIR)/$(CASE_DIR)/04_rotate-clockwise/$$d $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise; \
-		for f in $$(find $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/$$d -type f); \
+
+# generate tests for rotate counter-clockwise from rotate clockwise tests 
+# for figures that have two or one rotations (I, S, Z, O) (results are the same, only command is diffirent)
+# find lines with arguments; change first '3' to '4'; write changes in-place (echo do the trick)
+ROTATE_COMMON := 0_I 3_S 4_Z 5_O
+$(ROTATE_COMMON): %: ./$(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/%
+$(addprefix ./$(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise/, $(ROTATE_COMMON)):
+	cp -r $(TEST_DIR)/$(CASE_DIR)/04_rotate-clockwise/$(notdir $@) $(TEST_DIR)/$(CASE_DIR)/05_rotate-counter-clockwise
+	for f in $$(find $@ -type f); \
 	        do \
-			echo "$$(awk '{if (((NR - 1) % 25 == 0) || ((NR - 2) % 25 == 0)) $$1=4; print $$0}' $$f)" > $$f; \
-		done \
+		echo "$$(awk '{if (((NR - 1) % 25 == 0) || ((NR - 2) % 25 == 0)) $$1=4; print $$0}' $$f)" > $$f; \
 	done
 
+test: $(TEST_RUNNERS) cmpl | $(ROTATE_COMMON)
 	$(TEST_DIR)/test_init $(TEST_DIR)/initCases/er.txt $(run_$(PL)) && $(TEST_DIR)/test $(TEST_DIR)/$(CASE_DIR)/$(TEST_PATH) $(run_$(PL))
 
 ### CLEAN ###
