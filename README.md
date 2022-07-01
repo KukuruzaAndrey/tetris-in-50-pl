@@ -18,7 +18,7 @@ make PL=C   #JS, etc
 ### Done languages
 - [x] C
 - [x] JS
-- [ ] JAVA
+- [x] JAVA
 
 ### Test
 ```

@@ -1,9 +1,7 @@
 import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.stream.IntStream;
 
 class core {
-  public static void main(String args[]) {
+  public static void main(String[] args) {
     if (args.length == 10) {
       Game game = new Game(args);
       game.update();
@@ -13,6 +11,8 @@ class core {
       Game game = new Game();
       System.out.println(game.getNextState());
       System.out.println(game.render());
+    } else {
+      System.out.println("wrong arguments");
     }
   }
 }
@@ -22,6 +22,7 @@ class Random {
     return (int)(Math.random() * (max - min + 1)) + min;
   }
 }
+
 class Rotation {
   public int[][] squares;
   public int ofx;
@@ -35,119 +36,149 @@ class Rotation {
 }
 
 class Figure {
-  public Rotation rotations[];
+  private static final Rotation[][] FIGURES = {
+    { // I
+      new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 3, 0 } }, 0, 2),
+      new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 0, 3 } }, 2, 0)
+    },
+    { // L
+      new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 0, 1 } }, 0, 1),
+      new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 1, 2 } }, 0, 0),
+      new Rotation(new int[][] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 2, 0 } }, 0, 0),
+      new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 1, 2 } }, 1, 0)
+    },
+    { // J
+      new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 2, 1 } }, 0, 1),
+      new Rotation(new int[][] { { 1, 0 }, { 1, 1 }, { 1, 2 }, { 0, 2 } }, 0, 0),
+      new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 1, 1 }, { 2, 1 } }, 0, 0),
+      new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 0, 2 } }, 1, 0)
+    },
+    { // S
+      new Rotation(new int[][] { { 1, 0 }, { 2, 0 }, { 0, 1 }, { 1, 1 } }, 0, 1),
+      new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 1, 1 }, { 1, 2 } }, 1, 0)
+    },
+    { // Z
+      new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 2, 1 } }, 0, 1),
+      new Rotation(new int[][] { { 0, 1 }, { 1, 0 }, { 1, 1 }, { 0, 2 } }, 1, 0)
+    },
+    { // O
+      new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 1, 1 }, { 1, 0 } }, 0, 0)
+    },
+    { // T
+      new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 1, 1 } }, 0, 1),
+      new Rotation(new int[][] { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 1, 2 } }, 0, 0),
+      new Rotation(new int[][] { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 2, 1 } }, 0, 0),
+      new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 1, 1 } }, 1, 0)
+    }
+  };
 
-  public Figure(Rotation rotations[]) {
-    this.rotations = rotations;
+  private final Rotation[] rotations;
+  private final int figIndex;
+  private int rotIndex;
+
+  private static int getNextFigIndex() {
+    return Random.getRandomIntInclusive(0, FIGURES.length - 1);
+  }
+
+  public Figure(int fi, int ri) {
+    figIndex = fi;
+    rotIndex = ri;
+    rotations = FIGURES[figIndex];
+  }
+
+  public Figure() {
+    figIndex = getNextFigIndex();
+    rotIndex = 0;
+    rotations = FIGURES[figIndex];
+  }
+
+  public int getIndex() {
+    return figIndex;
+  }
+
+  public int getOfx() {
+    return rotations[rotIndex].ofx;
+  }
+
+  public int getOfy() {
+    return rotations[rotIndex].ofy;
+  }
+
+  public int[] getCoords(int i) {
+    return rotations[rotIndex].squares[i];
+  }
+
+  public void nextRotIndex() {
+    rotIndex = (rotIndex == rotations.length - 1) ? 0 : rotIndex + 1;
+  }
+
+  public void prevRotIndex() {
+    rotIndex = (rotIndex == 0) ? rotations.length - 1 : rotIndex - 1;
+  }
+
+  @Override
+  public String toString() {
+    return figIndex + " " + rotIndex;
   }
 }
 
 class BoardFigure {
-  private static final Figure[] FIGURES = {
-    new Figure(new Rotation[] { // I
-        new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 3, 0 } }, 0, 2),
-        new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 0, 3 } }, 2, 0)
-      }),
-    new Figure(new Rotation[] { // L
-        new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 0, 1 } }, 0, 1),
-        new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 1, 2 } }, 0, 0),
-        new Rotation(new int[][] { { 0, 1 }, { 1, 1 }, { 2, 1 }, { 2, 0 } }, 0, 0),
-        new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 1, 2 } }, 1, 0)
-      }),
-    new Figure(new Rotation[] { // J
-        new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 2, 1 } }, 0, 1),
-        new Rotation(new int[][] { { 1, 0 }, { 1, 1 }, { 1, 2 }, { 0, 2 } }, 0, 0),
-        new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 1, 1 }, { 2, 1 } }, 0, 0),
-        new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 0, 2 } }, 1, 0)
-      }),
-    new Figure(new Rotation[] { // S
-        new Rotation(new int[][] { { 1, 0 }, { 2, 0 }, { 0, 1 }, { 1, 1 } }, 0, 1),
-        new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 1, 1 }, { 1, 2 } }, 1, 0)
-      }),
-    new Figure(new Rotation[] { // Z
-        new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 2, 1 } }, 0, 1),
-        new Rotation(new int[][] { { 0, 1 }, { 1, 0 }, { 1, 1 }, { 0, 2 } }, 1, 0)
-      }),
-    new Figure(new Rotation[] { // O
-        new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 1, 1 }, { 1, 0 } }, 0, 0)
-      }),
-    new Figure(new Rotation[] { // T
-        new Rotation(new int[][] { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 1, 1 } }, 0, 1),
-        new Rotation(new int[][] { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 1, 2 } }, 0, 0),
-        new Rotation(new int[][] { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 2, 1 } }, 0, 0),
-        new Rotation(new int[][] { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 1, 1 } }, 1, 0)
-      })
-  };
+  private static final int COLORS_COUNT = 8;
 
-  private static final String[] COLORS = {
-    "", // for empty
-    "\033[41m", // BackgroundRed
-    "\033[42m", // BackgroundGreen
-    "\033[43m", // BackgroundYellow
-    "\033[44m", // BackgroundBlue
-    "\033[45m", // BackgroundMagenta
-    "\033[46m", // BackgroundCyan
-    "\033[47m" // BackgroundWhite
-  };
+  private final Figure figure;
 
-  private Figure figure;
-  private int figIndex;
-  private int rotateIndex;
+  // need to be private
   public int color;
   public int offsetX;
   public int offsetY;
 
-  public static int getNextFigIndex() {
-    return Random.getRandomIntInclusive(0, FIGURES.length - 1);
-  }
-
-  public static int getNextFigColor() {
-    return Random.getRandomIntInclusive(1, COLORS.length - 1);
+  private static int getNextFigColor() {
+    return Random.getRandomIntInclusive(1, COLORS_COUNT - 1);
   }
 
   public BoardFigure() {
-    figIndex = getNextFigIndex();
-    rotateIndex = 0;
+    figure = new Figure();
     color = getNextFigColor();
-    figure = FIGURES[figIndex];
-    offsetX = figIndex == 0 ? 3 : 4;
-    offsetY = -1 * figure.rotations[rotateIndex].ofy;
+    offsetX = figure.getIndex() == 0 ? 3 : 4;
+    offsetY = -1 * figure.getOfy();
   }
 
   public BoardFigure(int figIndex, int rotateIndex, int color, int offsetX, int offsetY) {
-    this.figIndex = figIndex;
-    this.rotateIndex = rotateIndex;
+    figure = new Figure(figIndex, rotateIndex);
     this.color = color;
-    this.figure = FIGURES[figIndex];
     this.offsetX = offsetX;
     this.offsetY = offsetY;
   }
 
   public BoardFigure(int figIndex, int color) {
-    this.figIndex = figIndex;
-    this.rotateIndex = 0;
+    figure = new Figure(figIndex, 0);
     this.color = color;
-    this.figure = FIGURES[figIndex];
-    this.offsetX = figIndex == 0 ? 3 : 4;
-    this.offsetY = -1 * figure.rotations[rotateIndex].ofy;
+    offsetX = figure.getIndex() == 0 ? 3 : 4;
+    offsetY = -1 * figure.getOfy();
+  }
+
+  public BoardFigure forSmallBoard() {
+    offsetX = figure.getIndex() == 5 ? 2 : 1;
+    offsetY = figure.getIndex() == 5 ? 2 : 1;
+    return this;
   }
 
   @Override
   public String toString() {
-    return String.valueOf(figIndex) + " " + String.valueOf(rotateIndex) + " " + String.valueOf(color) + " " + String.valueOf(offsetX) +
-      " " + String.valueOf(offsetY);
+    return figure.toString() + " " + color + " " + offsetX +
+      " " + offsetY;
   }
 
   public int[][] getCoords() {
     int [][] res = new int[4][2];
     for(int i = 0; i < 4; ++i) {
-      res[i][0] = figure.rotations[rotateIndex].squares[i][0] + offsetX + figure.rotations[rotateIndex].ofx;
-      res[i][1] = figure.rotations[rotateIndex].squares[i][1] + offsetY + figure.rotations[rotateIndex].ofy;
+      res[i][0] = figure.getCoords(i)[0] + offsetX + figure.getOfx();
+      res[i][1] = figure.getCoords(i)[1] + offsetY + figure.getOfy();
     }
     return res;
   }
 
-  // crutch
+  // crutch, need to be removed
   public void moveUp() {
     offsetY -= 1;
   }
@@ -163,19 +194,23 @@ class BoardFigure {
   }
 
   public void rotateClockwise() {
-    int newIndex = (rotateIndex == FIGURES[figIndex].rotations.length - 1) ? 0 : rotateIndex + 1;
-    rotateIndex = newIndex;
+    figure.nextRotIndex();
   }
 
   public void rotateCounterClockwise() {
-    int newIndex = (rotateIndex == 0) ? FIGURES[figIndex].rotations.length - 1 : rotateIndex - 1;
-    rotateIndex = newIndex;
+    figure.prevRotIndex();
+  }
+
+  public int getFigIndex() {
+    return figure.getIndex();
   }
 
 }
 
-class SmallBoard {
-  private static final String[] COLORS = {
+abstract class RenderBoard {
+  protected static int BOARD_W = 10;
+  protected static int BOARD_H = 20;
+  protected static final String[] COLORS = {
     "", // for empty
     "\033[41m", // BackgroundRed
     "\033[42m", // BackgroundGreen
@@ -186,40 +221,52 @@ class SmallBoard {
     "\033[47m" // BackgroundWhite
   };
 
-  private static int NEXT_P_BOARD_W = 6;
-  private static int NEXT_P_BOARD_H = 6;
-  private static String RESET = "\u001B[m";
-  private static String INVERSE = "\u001B[7m";
-  private static String CEIL = "\u2582";
-  private static String FLOOR = INVERSE + "\u2586" + RESET;
-  private static String LEFT = INVERSE + "\u258a" + RESET;
-  private static String RIGHT = "\u258e";
-  
-  public int nextFigIndex;
-  public int nextFigColor;
-  public int score;
+  protected static int NEXT_P_BOARD_W = 6;
+  protected static int NEXT_P_BOARD_H = 6;
+  protected static String RESET = "\u001B[m";
+  protected static String INVERSE = "\u001B[7m";
+  protected static String CEIL = "\u2582";
+  protected static String FLOOR = INVERSE + "\u2586" + RESET;
+  protected static String LEFT = INVERSE + "\u258a" + RESET;
+  protected static String RIGHT = "\u258e";
+  protected static String SPACER = ".";
+}
+
+class SmallBoard extends RenderBoard {
+  private int score;
   private BoardFigure bf;
 
   public SmallBoard() {
-    this(0);
-  }
-
-  public SmallBoard(int score) {
-    this(BoardFigure.getNextFigIndex(), BoardFigure.getNextFigColor(), score);
+    score = 0;
+    newFigure();
   }
 
   public SmallBoard(int nextFigIndex, int nextFigColor, int score) {
-    this.nextFigIndex = nextFigIndex;
-    this.nextFigColor = nextFigColor;
     this.score = score;
-    this.bf = new BoardFigure(nextFigIndex, 0, nextFigColor, nextFigIndex == 5 ? 2 : 1, nextFigIndex == 5 ? 2 : 1);
+    bf = new BoardFigure(nextFigIndex, nextFigColor).forSmallBoard();
+  }
+
+  public void addScore(int score) {
+    this.score += score;
+  }
+
+  public int getFigIndex() {
+    return bf.getFigIndex();
+  }
+
+  public int getColor() {
+    return bf.color;
+  }
+
+  public void newFigure() {
+    this.bf = new BoardFigure().forSmallBoard();
   }
 
   public String renderLine(int y) {
     if (y > NEXT_P_BOARD_H + 2) return "";
     if (y == 0) return " " + String.format("%06d", score);
-    if (y == 1) return (new StringBuilder()).append(" ").append(CEIL.repeat(NEXT_P_BOARD_W)).append(" ").toString();
-    if (y == NEXT_P_BOARD_H + 2) return (new StringBuilder()).append(" ").append(FLOOR.repeat(NEXT_P_BOARD_W)).append(" ").toString();
+    if (y == 1) return " " + CEIL.repeat(NEXT_P_BOARD_W) + " ";
+    if (y == NEXT_P_BOARD_H + 2) return " " + FLOOR.repeat(NEXT_P_BOARD_W) + " ";
 
     StringBuilder line = new StringBuilder();
     for (int x = 0; x < NEXT_P_BOARD_W; x++) {
@@ -231,46 +278,26 @@ class SmallBoard {
           return xc == xx && yc == yy - 2;
         });
       if (isPiece) {
-        line.append(COLORS[nextFigColor]).append(" ").append(RESET);
+        line.append(COLORS[bf.color]).append(" ").append(RESET);
       } else {
         line.append(" ");
       }
     }
 
-    return LEFT + line.toString() + RIGHT;
+    return LEFT + line + RIGHT;
   }
 
   @Override
   public String toString() {
-    return String.valueOf(nextFigIndex) + " " + String.valueOf(nextFigColor) + " " + String.valueOf(score);
+    return getFigIndex() + " " + getColor() + " " + score;
   }
 }
 
-class Board {
-  private static final int BOARD_H = 20;
-  private static final int BOARD_W = 10;
-  private static String RESET = "\u001B[m";
-  private static String INVERSE = "\u001B[7m";
-  private static String CEIL = "\u2582";
-  private static String FLOOR = INVERSE + "\u2586" + RESET;
-  private static String LEFT = INVERSE + "\u258a" + RESET;
-  private static String RIGHT = "\u258e";
-  private static String SPACER = ".";
+class Board extends RenderBoard {
+  private static final int[] SCORES = { 0, 10, 30, 60, 100 };
 
-  private static final int[] SCORES = { 10, 30, 60, 100 };
-  private static final String[] COLORS = {
-    "", // for empty
-    "\033[41m", // BackgroundRed
-    "\033[42m", // BackgroundGreen
-    "\033[43m", // BackgroundYellow
-    "\033[44m", // BackgroundBlue
-    "\033[45m", // BackgroundMagenta
-    "\033[46m", // BackgroundCyan
-    "\033[47m"  // BackgroundWhite
-  };
-
-  private int[][] board;
-  private SmallBoard sb;
+  private final int[][] board;
+  private final SmallBoard sb;
   private BoardFigure bf;
 
   public Board() {
@@ -301,26 +328,21 @@ class Board {
     return String.format("%s %s %s", strBoard, bf, sb);
   }
 
-  private static boolean isLegalCoords(int[][] coords)  {
+  private boolean isLegalCoords(int[][] coords)  {
     return Arrays.stream(coords).allMatch(pair -> {
         int x = pair[0];
         int y = pair[1];
-        return y < BOARD_H && x >= 0 && x < BOARD_W;
-      });
-  }
-
-  private boolean isBoardCellsFree(int[][] coords) {
-    return Arrays.stream(coords).allMatch(pair -> {
-        int x = pair[0];
-        int y = pair[1];
-        // y < 0 - don't care about segments above top of the screen 
-        return y < 0 || board[y][x] == 0;
+        boolean isLegal = (y < BOARD_H && x >= 0 && x < BOARD_W);
+        if (!isLegal) return false;
+        // y < 0 - don't care about segments above top of the screen
+        boolean isBoardCellFree = (y < 0 || board[y][x] == 0);
+        return isBoardCellFree;
       });
   }
 
   private boolean canPlace() {
     int[][] coords = bf.getCoords();
-    return isLegalCoords(coords) && isBoardCellsFree(coords);
+    return isLegalCoords(coords);
   }
 
   private boolean tryMoveDown() {
@@ -359,9 +381,7 @@ class Board {
     for (int y = 0; y < BOARD_H; y++) {
       boolean full = Arrays.stream(board[y]).allMatch(c -> c != 0);
       if (full) {
-        for (int yy = y; yy > 0; yy--) {
-          board[yy] = board[yy - 1];
-        }
+        System.arraycopy(board, 0, board, 1, y);
         board[0] = new int[BOARD_W];
         countFullLines++;
       }
@@ -371,7 +391,7 @@ class Board {
   }
 
   private String renderLine(int y) {
-    StringBuffer res = new StringBuffer();
+    StringBuilder res = new StringBuilder();
     for(int x = 0; x < BOARD_W; x++) {
       if (board[y][x] != 0) {
         res.append(COLORS[board[y][x]]).append(" ").append(RESET);
@@ -383,7 +403,7 @@ class Board {
   }
 
   public String render() {
-    StringBuffer res = new StringBuffer();
+    StringBuilder res = new StringBuilder();
     addFigure();
 
     res.append(" ").append(CEIL.repeat(BOARD_W)).append(" \n");
@@ -397,18 +417,22 @@ class Board {
     return res.toString();
   }
 
+  private void processNewFigure() {
+    addFigure();
+    int fl = removeFullLines();
+    sb.addScore(SCORES[fl]);
+    bf = new BoardFigure(sb.getFigIndex(), sb.getColor());
+    sb.newFigure();
+    if (endGame()) {
+      System.out.println("Game over!");
+      System.exit(0);
+    }
+  }
+
   public void moveDown() {
     boolean can = tryMoveDown();
     if (!can) {
-      addFigure();
-      int fl = removeFullLines();
-      if (fl > 0) sb.score += SCORES[fl - 1];
-      bf = new BoardFigure(sb.nextFigIndex, sb.nextFigColor);
-      sb = new SmallBoard(sb.score);
-      if (endGame()) {
-        System.out.println("Game over!");
-        System.exit(0);
-      }
+      processNewFigure();
     }
   }
 
@@ -433,22 +457,13 @@ class Board {
   }
 
   public void drop() {
-    while (tryMoveDown()) {}
-    addFigure();
-    int fl = removeFullLines();
-    if (fl > 0) sb.score += SCORES[fl - 1];
-    bf = new BoardFigure(sb.nextFigIndex, sb.nextFigColor);
-    sb = new SmallBoard(sb.score);
-    if (endGame()) {
-        System.out.println("Game over!");
-        System.exit(0);
-    }
+    while (tryMoveDown());
+    processNewFigure();
   }
 
 }
 
 class Game {
-  
   enum MOVES {
     DOWN,
     LEFT,
@@ -456,10 +471,10 @@ class Game {
     ROTATE_CLOCKWISE,
     ROTATE_COUNTER_CLOCKWISE,
     DROP
-  };
+  }
 
-  private MOVES move;
-  private Board board;
+  private final MOVES move;
+  private final Board board;
 
   public Game(String[] args) {
     move = MOVES.values()[Integer.parseInt(args[0])];
@@ -474,31 +489,19 @@ class Game {
   }
 
   public void update() {
-    switch(move) {
-    case DOWN:
-      board.moveDown();
-      break;
-    case LEFT:
-      board.moveLeft();
-      break;
-    case RIGHT:
-      board.moveRight();
-      break;
-    case ROTATE_CLOCKWISE:
-      board.rotateClockwise();
-      break;
-    case ROTATE_COUNTER_CLOCKWISE:
-      board.rotateCounterClockwise();
-      break;
-    case DROP:
-      board.drop();
-      break;
+    switch (move) {
+      case DOWN -> board.moveDown();
+      case LEFT -> board.moveLeft();
+      case RIGHT -> board.moveRight();
+      case ROTATE_CLOCKWISE -> board.rotateClockwise();
+      case ROTATE_COUNTER_CLOCKWISE -> board.rotateCounterClockwise();
+      case DROP -> board.drop();
     }
   }
 
   public String getNextState() {
     return String.format("%d %s", move.ordinal(), board);
-  }  
+  }
 
   public String render() {
     return board.render();

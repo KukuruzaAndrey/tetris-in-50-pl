@@ -13,17 +13,53 @@ CASE_DIR := cases
 RUNNER := runner
 TEST_RUNNERS := $(TEST_DIR)/test $(TEST_DIR)/test_init
 
-### PL-S ###  <-- please fill it when add new PL
+##### PL-S #####  <-- please fill this section when add new PL
+
+# Files need to be executed (generated files for compiled pl) or
+# interpret (for interpreted pl)
 C := ./$(SRCS_DIR)/c/core
 JS := ./$(SRCS_DIR)/js/core.js
 JAVA := ./$(SRCS_DIR)/java/core.class
+
+# Default pl. easy for develop
 PL ?= JAVA
+
+# Add PL to it's category. PL_LIST for all)
 PL_LIST := C JS JAVA
 PL_CMPL_LIST := C JAVA
 PL_INTRP_LIST := JS JAVA
 
+# Way of execute interpreted files
 INTRP_JS := "node $(JS)"
 INTRP_JAVA := "java -cp $(dir $(JAVA)) $(notdir $(JAVA:.class=))"
+
+# Way of compile compiled PL-s
+$(C): $(addsuffix .c,$(C)) $(addsuffix .h,$(C))
+	$(CC) $(CFLAGS) -o $(C) $(addsuffix .c,$(C))
+
+$(JAVA): $(JAVA:.class=.java)
+	javac -Xlint:all $(JAVA:.class=.java)
+
+# Way of cleanup
+clean_C:
+	rm -f $(C)
+
+clean_JAVA:
+	rm -f $(dir $(JAVA))/*.class
+
+# Way of install compiler or sdk
+inst_C:
+	sudo apt install -y gcc
+inst_JS:
+	curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+	sudo apt install -y nodejs
+inst_JAVA:
+	sudo apt install -y openjdk-17-jdk openjdk-17-jre
+	sudo update-java-alternatives -s $$(sudo update-java-alternatives -l | grep 1.17 | cut -d " " -f1) || echo '.'
+	javac --version
+	java --version
+
+##### END PL-S #####
 
 ##### RULES #####
 all: run
@@ -31,9 +67,23 @@ all: run
 ### ALL PL-S ###
 cmpl_all: $(foreach PL, $(PL_CMPL_LIST), $($(PL)))
 
-TEST_PL_LIST ?= $(PL_LIST)
-test_all: $(TEST_RUNNERS) cmpl_all | $(ROTATE_COMMON)
-	$(foreach PL, $(TEST_PL_LIST), $(MAKE) test PL=$(PL) &&) true
+test_all: $(TEST_RUNNERS) cmpl_all inst_all | $(ROTATE_COMMON)
+	$(foreach PL, $(PL_LIST), $(MAKE) test PL=$(PL) &&) true
+
+inst_all: $(foreach PL, $(PL_LIST), $(MAKE) inst PL=$(PL) &&) true
+
+
+### DIFF_PL ###
+DIFF_PL_LIST ?= $(PL)
+cmpl_diff:$(foreach PL, $(filter $(DIFF_PL_LIST), $(PL_CMPL_LIST)), $($(PL)))
+
+inst_diff:
+	 $(foreach PL, $(DIFF_PL_LIST),$(MAKE) inst PL=$(PL) &&) true
+
+test_diff: $(TEST_RUNNERS) inst_diff cmpl_diff | $(ROTATE_COMMON)
+	$(foreach PL, $(DIFF_PL_LIST),$(MAKE) test PL=$(PL) &&) true
+
+
 
 ### RUNNNER ###
 $(RUNNER): runner.c utils.c
@@ -42,17 +92,11 @@ one-runner: one-runner.c utils.c
 ### CURRENT PL ###
 cmpl: $(if $(filter $(PL), $(PL_CMPL_LIST)), $($(PL)))
 
-# command to exec core at currnt PL
+# command to exec core at current PL
 run_$(PL) := $(if $(filter $(PL), $(PL_INTRP_LIST)), $(INTRP_$(PL)), $($(PL)))
 run: $(RUNNER) cmpl 
 	./$(RUNNER) $(run_$(PL))
-
-### COMPILE PL ### <-- please add new rule when add new compiled PL 
-$(C): $(addsuffix .c,$(C)) $(addsuffix .h,$(C))
-	$(CC) $(CFLAGS) -o $(C) $(addsuffix .c,$(C))
-
-$(JAVA): $(JAVA:.class=.java)
-	javac -Xlint:unchecked $(JAVA:.class=.java)
+inst: inst_$(PL)
 
 ### TEST ###
 $(TEST_RUNNERS): %: %.c utils.c
@@ -73,12 +117,6 @@ test: $(TEST_RUNNERS) cmpl | $(ROTATE_COMMON)
 	$(TEST_DIR)/test_init $(TEST_DIR)/initCases/er.txt $(run_$(PL)) && $(TEST_DIR)/test $(TEST_DIR)/$(CASE_DIR)/$(TEST_PATH) $(run_$(PL))
 
 ### CLEAN ###
-clean_C:
-	rm -f $(C)
-
-clean_JAVA:
-	rm -f $(dir $(JAVA))/*.class
-
 clean: $(foreach PL, $(PL_CMPL_LIST), clean_$(PL))
 	rm -f $(RUNNER)
 	rm -f one-runner
