@@ -17,14 +17,14 @@ jobs:
         run: |
           set -xe
           java --version
-          test_pl_list=$( git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | \
+          test_diff_list=$( git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | \
                           fgrep srcs | \
                           awk -F '/' '{print $2}' | \
                           tr "[:lower:]" "[:upper:]" | \
                           uniq | \
                           tr '\n' ' ' )
-          echo $test_pl_list
-          export TEST_PL_LIST=$test_pl_list
+          echo $test_diff_list
+          export TEST_DIFF_LIST=$test_diff_list
       - name: Run tests
-        run: make test_all
+        run: make test_diff
 

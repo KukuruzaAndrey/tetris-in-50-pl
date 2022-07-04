@@ -106,7 +106,7 @@ void run(const char *testFileName, const char *corePath) {
 
     // concatenate path to core and args
     snprintf(coreArgs, sizeof(coreArgs), "%s %s", corePath, coreInputs);
-    // printf("%s - args\n", coreArgs);
+
     // open core with args
     corePipe = checkError(popen(coreArgs, "r"), coreArgs);
 
@@ -128,7 +128,6 @@ void run(const char *testFileName, const char *corePath) {
       fgets(line, sizeof(line), testFile);
       bucket = stpcpy(bucket, line);
     }
-
     // if testcase with wildcards - use appropriate compare func 
     if (useWildcard) {
       pstrcmp = strcmpWithWildcard;
@@ -207,7 +206,7 @@ void traverseAndExec(char *dirPath, void (*exec)(const char *, const char *), ch
   }
 
   closedir(d);
-//  printf("leave %s\n", dirPath);
+  // printf("leave %s\n", dirPath);
 }
 
 int isDirectory(const char *path) {
