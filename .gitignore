@@ -2,7 +2,9 @@
 
 # C #
 /srcs/c/core
-
+# HASKELL #
+srcs/haskell/*
+!srcs/haskell/core.hs
 # JAVA #
 srcs/java/*.class
 

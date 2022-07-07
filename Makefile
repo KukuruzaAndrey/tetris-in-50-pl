@@ -13,6 +13,9 @@ CASE_DIR := cases
 RUNNER := runner
 TEST_RUNNERS := $(TEST_DIR)/test $(TEST_DIR)/test_init
 
+### DEFAULT TARGET ###
+all: run
+
 ##### PL-S #####  <-- please fill this section when add new PL
 
 # Files need to be executed (generated files for compiled pl) or
@@ -20,13 +23,14 @@ TEST_RUNNERS := $(TEST_DIR)/test $(TEST_DIR)/test_init
 C := ./$(SRCS_DIR)/c/core
 JS := ./$(SRCS_DIR)/js/core.js
 JAVA := ./$(SRCS_DIR)/java/core.class
+HASKELL := ./$(SRCS_DIR)/haskell/core
 
 # Default pl. easy for develop
-PL ?= JAVA
+PL ?= HASKELL
 
 # Add PL to it's category. PL_LIST for all)
 PL_LIST := C JS JAVA
-PL_CMPL_LIST := C JAVA
+PL_CMPL_LIST := C JAVA HASKELL
 PL_INTRP_LIST := JS JAVA
 
 # Way of execute interpreted files
@@ -34,18 +38,23 @@ INTRP_JS := "node $(JS)"
 INTRP_JAVA := "java -cp $(dir $(JAVA)) $(notdir $(JAVA:.class=))"
 
 # Way of compile compiled PL-s
-$(C): $(addsuffix .c,$(C)) $(addsuffix .h,$(C))
-	$(CC) $(CFLAGS) -o $(C) $(addsuffix .c,$(C))
-
+$(C): %: %.c %.h
+	$(CC) $(CFLAGS) -o $@ $(addsuffix .c,$@)
 $(JAVA): $(JAVA:.class=.java)
 	javac -Xlint:all $(JAVA:.class=.java)
+$(HASKELL): %: %.hs
+	ghc -Wall $@
+
 
 # Way of cleanup
 clean_C:
 	rm -f $(C)
-
 clean_JAVA:
 	rm -f $(dir $(JAVA))/*.class
+clean_HASKELL:
+	rm -f $(HASKELL)
+	rm -f $(addsuffix .hi,$(HASKELL))
+	rm -f $(addsuffix .o,$(HASKELL))
 
 # Way of install compiler or sdk
 inst_C:
@@ -58,20 +67,17 @@ inst_JAVA:
 	sudo update-java-alternatives -s $$(sudo update-java-alternatives -l | grep 1.17 | cut -d " " -f1) || echo '.'
 	javac --version
 	java --version
+inst_HASKELL:
+	sudo apt install -y ghc
 
 ##### END PL-S #####
 
-##### RULES #####
-all: run
-
 ### ALL PL-S ###
 cmpl_all: $(foreach PL, $(PL_CMPL_LIST), $($(PL)))
-
 test_all: $(TEST_RUNNERS) cmpl_all inst_all | $(ROTATE_COMMON)
 	$(foreach PL, $(PL_LIST), $(MAKE) test PL=$(PL) &&) true
-
 inst_all: $(foreach PL, $(PL_LIST), $(MAKE) inst PL=$(PL) &&) true
-
+clean_all: $(foreach PL, $(PL_CMPL_LIST), clean_$(PL))
 
 ### DIFF_PL ###
 DIFF_PL_LIST ?= $(PL)
@@ -82,8 +88,6 @@ inst_diff:
 
 test_diff: $(TEST_RUNNERS) inst_diff cmpl_diff | $(ROTATE_COMMON)
 	$(foreach PL, $(DIFF_PL_LIST),$(MAKE) test PL=$(PL) &&) true
-
-
 
 ### RUNNNER ###
 $(RUNNER): runner.c utils.c
@@ -117,7 +121,7 @@ test: $(TEST_RUNNERS) cmpl | $(ROTATE_COMMON)
 	$(TEST_DIR)/test_init $(TEST_DIR)/initCases/er.txt $(run_$(PL)) && $(TEST_DIR)/test $(TEST_DIR)/$(CASE_DIR)/$(TEST_PATH) $(run_$(PL))
 
 ### CLEAN ###
-clean: $(foreach PL, $(PL_CMPL_LIST), clean_$(PL))
+clean: clean_$(PL)
 	rm -f $(RUNNER)
 	rm -f one-runner
 	rm -f ./test/test
