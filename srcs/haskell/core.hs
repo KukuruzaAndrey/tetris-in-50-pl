@@ -8,7 +8,7 @@ main = do
   putStrLn $ render nextState
 
 data Move = Down | Left | Right | Rotate_C | Rotate_C_C | Drop
-type Board = [[Int]]
+type Board = String
 data State = State
              {
                move :: Move,
@@ -23,12 +23,13 @@ data State = State
                score :: Int
              }
 
-parseBoard :: String -> [[Int]]
-parseBoard = 
+parseBoard :: String -> Board
+parseBoard b = b
 parseState :: [String] -> State
 parseState args = State
   (toEnum . read $ args !! 0)
   (parseBoard $ args !! 1)
+  (read $ args !! 2)
   
 
 update :: State -> State
