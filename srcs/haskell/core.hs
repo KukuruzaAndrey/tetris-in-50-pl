@@ -1,5 +1,7 @@
-import System.Environment   
-main :: IO () 
+import System.Environment
+import Data.List
+
+main :: IO ()
 main = do
   args <- getArgs
   let state = parseState args
@@ -7,7 +9,10 @@ main = do
   putStrLn $ printState nextState
   putStrLn $ render nextState
 
-data Move = Down | Left | Right | Rotate_C | Rotate_C_C | Drop
+data Move = Down | Left | Right | Rotate_C | Rotate_C_C | Drop deriving (Enum)
+instance Show Move where
+  show = show . fromEnum
+
 type Board = String
 data State = State
              {
@@ -22,6 +27,20 @@ data State = State
                nextFigColor :: Int,
                score :: Int
              }
+instance Show State where
+  show s = intercalate " " 
+           [
+             (show $ move s),
+             (show $ board s),
+             (show $ figIndex s),
+             (show $ rotateIndex s),
+             (show $ color s),
+             (show $ offsetX s),
+             (show $ offsetY s),
+             (show $ nextFigIndex s),
+             (show $ nextFigColor s),
+             (show $ score s)
+           ]
 
 parseBoard :: String -> Board
 parseBoard b = b
@@ -30,13 +49,20 @@ parseState args = State
   (toEnum . read $ args !! 0)
   (parseBoard $ args !! 1)
   (read $ args !! 2)
+  (read $ args !! 3)
+  (read $ args !! 4)
+  (read $ args !! 5)
+  (read $ args !! 6)
+  (read $ args !! 7)
+  (read $ args !! 8)
+  (read $ args !! 9)
   
 
 update :: State -> State
-update s = State Rotate_C
+update s = s
 
 printState :: State -> String
-printState s = "state"
+printState s = show s
 
 render :: State -> String
-render s = "tetris"
+render s = printState s
