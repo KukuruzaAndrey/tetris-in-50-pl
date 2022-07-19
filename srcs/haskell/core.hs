@@ -31,7 +31,7 @@ instance Show State where
   show s = intercalate " " 
            [
              (show $ move s),
-             (show $ board s),
+             (board s),
              (show $ figIndex s),
              (show $ rotateIndex s),
              (show $ color s),
