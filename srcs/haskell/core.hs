@@ -59,7 +59,18 @@ parseState args = State
   
 
 update :: State -> State
-update s = s
+update @state(State{
+move=move,
+board=board,
+figIndex=figIndex,
+rotateIndex=rotateIndex,
+color=color,
+offsetX=offsetX,
+offsetY=offsetY,
+nextFigIndex=nextFigIndex,
+nextFigColor=nextFigColor,
+score=score
+}) = state
 
 printState :: State -> String
 printState s = show s
