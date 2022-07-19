@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 import System.Environment
 import Data.List
 
@@ -59,18 +61,7 @@ parseState args = State
   
 
 update :: State -> State
-update @state(State{
-move=move,
-board=board,
-figIndex=figIndex,
-rotateIndex=rotateIndex,
-color=color,
-offsetX=offsetX,
-offsetY=offsetY,
-nextFigIndex=nextFigIndex,
-nextFigColor=nextFigColor,
-score=score
-}) = state
+update state@(State{..}) = state {figIndex = succ figIndex}
 
 printState :: State -> String
 printState s = show s
