@@ -69,6 +69,7 @@ inst_JAVA:
 	java --version
 inst_HASKELL:
 	sudo apt install -y ghc
+	sudo apt install -y libghc-random-dev
 
 ##### END PL-S #####
 

@@ -2,13 +2,15 @@
 
 import Prelude hiding (Left, Right)
 import System.Environment
+import System.Random
 import Data.List
 
 main :: IO ()
 main = do
   args <- getArgs
+  rg <- getStdGen
   let state = parseState args
-      nextState = update state
+      nextState = update state rg
   putStrLn $ printState nextState
   putStrLn $ render nextState
 
@@ -63,9 +65,20 @@ parseState args = if length args == 1
                        (read $ args !! 9)
   
 
-update :: State -> State
-update INIT_STATE = 
-update state@(State{..}) = case move of
+update :: State -> StdGen -> State
+update INIT_STATE rg = State
+                       Down
+                       (concat $ replicate 200 "0")
+                       (fst $ randomR (0, 6) rg)
+                       0
+                       (fst $ randomR (1, 7) rg)
+                       3
+                       (-1)
+                       (fst $ randomR (0, 6) rg)
+                       (fst $ randomR (1, 6) rg)
+                       0
+                    
+update state@(State{..}) _ = case move of
   Down       -> state {offsetY = succ offsetY}
   Left       -> state {offsetX = pred offsetX}
   Right      -> state {offsetX = succ offsetX}
