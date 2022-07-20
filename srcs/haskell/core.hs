@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
+import Prelude hiding (Left, Right)
 import System.Environment
 import Data.List
 
@@ -61,7 +62,10 @@ parseState args = State
   
 
 update :: State -> State
-update state@(State{..}) = state {figIndex = succ figIndex}
+update state@(State{..}) = case move of
+  Down  -> state {offsetY = succ offsetY}
+  Left  -> state {offsetX = pred offsetX}
+  Right -> state {offsetX = succ offsetX}
 
 printState :: State -> String
 printState s = show s
