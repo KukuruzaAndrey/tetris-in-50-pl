@@ -17,7 +17,7 @@ instance Show Move where
   show = show . fromEnum
 
 type Board = String
-data State = State
+data State = INIT_STATE | State
              {
                move :: Move,
                board :: Board,
@@ -48,20 +48,23 @@ instance Show State where
 parseBoard :: String -> Board
 parseBoard b = b
 parseState :: [String] -> State
-parseState args = State
-  (toEnum . read $ args !! 0)
-  (parseBoard $ args !! 1)
-  (read $ args !! 2)
-  (read $ args !! 3)
-  (read $ args !! 4)
-  (read $ args !! 5)
-  (read $ args !! 6)
-  (read $ args !! 7)
-  (read $ args !! 8)
-  (read $ args !! 9)
+parseState args = if length args == 1
+                  then INIT_STATE
+                  else State
+                       (toEnum . read $ args !! 0)
+                       (parseBoard $ args !! 1)
+                       (read $ args !! 2)
+                       (read $ args !! 3)
+                       (read $ args !! 4)
+                       (read $ args !! 5)
+                       (read $ args !! 6)
+                       (read $ args !! 7)
+                       (read $ args !! 8)
+                       (read $ args !! 9)
   
 
 update :: State -> State
+update INIT_STATE = 
 update state@(State{..}) = case move of
   Down       -> state {offsetY = succ offsetY}
   Left       -> state {offsetX = pred offsetX}
