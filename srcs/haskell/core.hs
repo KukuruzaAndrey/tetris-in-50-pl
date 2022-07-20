@@ -63,9 +63,12 @@ parseState args = State
 
 update :: State -> State
 update state@(State{..}) = case move of
-  Down  -> state {offsetY = succ offsetY}
-  Left  -> state {offsetX = pred offsetX}
-  Right -> state {offsetX = succ offsetX}
+  Down       -> state {offsetY = succ offsetY}
+  Left       -> state {offsetX = pred offsetX}
+  Right      -> state {offsetX = succ offsetX}
+  Rotate_C   -> state {rotateIndex = pred rotateIndex}
+  Rotate_C_C -> state {rotateIndex = succ rotateIndex}
+  Drop       -> state {offsetX = succ offsetX}
 
 printState :: State -> String
 printState s = show s
