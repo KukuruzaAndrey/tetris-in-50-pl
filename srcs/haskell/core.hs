@@ -4,6 +4,7 @@ import Prelude hiding (Left, Right)
 import System.Environment
 import System.Random
 import Data.List
+import Data.Maybe
 
 main :: IO ()
 main = do
@@ -19,6 +20,7 @@ instance Show Move where
   show = show . fromEnum
 
 type Board = String
+
 data State = INIT_STATE | State
              {
                move :: Move,
@@ -63,7 +65,24 @@ parseState args = if length args == 1
                        (read $ args !! 7)
                        (read $ args !! 8)
                        (read $ args !! 9)
-  
+
+getFigCoords :: Int -> Int -> Int -> Int -> Maybe [[Int]]
+getFigCoords figIndex rotateIndex offsetX offsetY = Just [[0,0], [0,1], [1,1]]
+
+boardCellsFree :: [[Int]] -> Board -> Bool
+boardCellsFree coords board = False
+
+canPlace :: State -> Bool
+canPlace s = isJust coords && boardCellsFree (fromJust coords) (board s)
+             where coords = getFigCoords (figIndex s) (rotateIndex s) (offsetX s) (offsetY s)
+
+
+needNewFigure :: State -> Bool
+needNewFigure s = not $ canPlace s
+
+processNewFigure :: State -> State
+processNewFigure s = s
+
 
 update :: State -> StdGen -> State
 update INIT_STATE rg = State
@@ -77,9 +96,10 @@ update INIT_STATE rg = State
                        (fst $ randomR (0, 6) rg)
                        (fst $ randomR (1, 6) rg)
                        0
-                    
 update state@(State{..}) _ = case move of
-  Down       -> state {offsetY = succ offsetY}
+  Down       -> if needNewFigure state
+                then processNewFigure state
+                else state {offsetY = succ offsetY}
   Left       -> state {offsetX = pred offsetX}
   Right      -> state {offsetX = succ offsetX}
   Rotate_C   -> state {rotateIndex = pred rotateIndex}
