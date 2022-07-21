@@ -65,9 +65,50 @@ parseState args = if length args == 1
                        (read $ args !! 7)
                        (read $ args !! 8)
                        (read $ args !! 9)
+data Rotation = Rotation { squares :: [[Int]], ofx :: Int, ofy :: Int }
+figures =
+  [
+    [ -- I
+      Rotation { squares = [[0, 0], [1, 0], [2, 0], [3, 0]], ofx = 0, ofy = 2 },
+      Rotation { squares = [[0, 0], [0, 1], [0, 2], [0, 3]], ofx = 2, ofy = 0 }
+    ],
+    [ -- L
+      Rotation { squares = [[0, 0], [1, 0], [2, 0], [0, 1]], ofx = 0, ofy = 1 },
+      Rotation { squares = [[0, 0], [1, 0], [1, 1], [1, 2]], ofx = 0, ofy = 0 },
+      Rotation { squares = [[0, 1], [1, 1], [2, 1], [2, 0]], ofx = 0, ofy = 0 },
+      Rotation { squares = [[0, 0], [0, 1], [0, 2], [1, 2]], ofx = 1, ofy = 0 }
+    ],
+    [ -- J
+      Rotation { squares = [[0, 0], [1, 0], [2, 0], [2, 1]], ofx = 0, ofy = 1 },
+      Rotation { squares = [[1, 0], [1, 1], [1, 2], [0, 2]], ofx = 0, ofy = 0 },
+      Rotation { squares = [[0, 0], [0, 1], [1, 1], [2, 1]], ofx = 0, ofy = 0 },
+      Rotation { squares = [[0, 0], [1, 0], [0, 1], [0, 2]], ofx = 1, ofy = 0 }
+    ],
+    [ -- S
+      Rotation { squares = [[1, 0], [2, 0], [0, 1], [1, 1]], ofx = 0, ofy = 1 },
+      Rotation { squares = [[0, 0], [0, 1], [1, 1], [1, 2]], ofx = 1, ofy = 0 }
+    ],
+    [ -- Z
+      Rotation { squares = [[0, 0], [1, 0], [1, 1], [2, 1]], ofx = 0, ofy = 1 },
+      Rotation { squares = [[0, 1], [1, 0], [1, 1], [0, 2]], ofx = 1, ofy = 0 }
+    ],
+    [ -- O
+      Rotation { squares = [[0, 0], [0, 1], [1, 1], [1, 0]], ofx = 0, ofy = 0 }
+    ],
+    [ -- T
+      Rotation { squares = [[0, 0], [1, 0], [2, 0], [1, 1]], ofx = 0, ofy = 1 },
+      Rotation { squares = [[1, 0], [0, 1], [1, 1], [1, 2]], ofx = 0, ofy = 0 },
+      Rotation { squares = [[1, 0], [0, 1], [1, 1], [2, 1]], ofx = 0, ofy = 0 },
+      Rotation { squares = [[0, 0], [0, 1], [0, 2], [1, 1]], ofx = 1, ofy = 0 }
+    ]
+  ]
 
 getFigCoords :: Int -> Int -> Int -> Int -> Maybe [[Int]]
-getFigCoords figIndex rotateIndex offsetX offsetY = Just [[0,0], [0,1], [1,1]]
+getFigCoords figIndex rotateIndex offsetX offsetY = if illegal coords
+                                                    then Nothing
+                                                    else Just ((filter (\(_:y:z) -> y >= 0)) coords)
+  where illegal c = True
+        coords = [[0,0], [0,1], [1,1]]
 
 boardCellsFree :: [[Int]] -> Board -> Bool
 boardCellsFree coords board = False
