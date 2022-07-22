@@ -15,6 +15,9 @@ main = do
   putStrLn $ printState nextState
   putStrLn $ render nextState
 
+board_w = 10
+board_h = 20
+
 data Move = Down | Left | Right | Rotate_C | Rotate_C_C | Drop deriving (Enum)
 instance Show Move where
   show = show . fromEnum
@@ -107,12 +110,10 @@ getFigCoords :: Int -> Int -> Int -> Int -> Maybe [[Int]]
 getFigCoords figIndex rotateIndex offsetX offsetY = if illegal coords
                                                     then Nothing
                                                     else Just ((filter (\(_:y:_) -> y >= 0)) coords)
-  where illegal = any (\(x:y:_) -> y >= board_h || x < 0 || x >= board_w)
-        coords = map (\(x:y:_) -> [x + offsetX + ofx, y + offsetY + ofy]) sqs
+  where illegal = any (\(x:y:_) -> y >= board_h || x < 0 || x >= board_w) :: [[Int]] -> Bool
+        coords = map (\(x:y:_) -> [x + offsetX + ofx f, y + offsetY + ofy f]) (squares f)
         f = figures !! figIndex !! rotateIndex
-        sqs = squares f
-        ofx = ofx f
-        ofy = ofy f
+
 
 boardCellsFree :: [[Int]] -> Board -> Bool
 boardCellsFree coords board = False
