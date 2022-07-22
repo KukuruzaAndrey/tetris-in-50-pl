@@ -106,9 +106,13 @@ figures =
 getFigCoords :: Int -> Int -> Int -> Int -> Maybe [[Int]]
 getFigCoords figIndex rotateIndex offsetX offsetY = if illegal coords
                                                     then Nothing
-                                                    else Just ((filter (\(_:y:z) -> y >= 0)) coords)
-  where illegal c = True
-        coords = [[0,0], [0,1], [1,1]]
+                                                    else Just ((filter (\(_:y:_) -> y >= 0)) coords)
+  where illegal = any (\(x:y:_) -> y >= board_h || x < 0 || x >= board_w)
+        coords = map (\(x:y:_) -> [x + offsetX + ofx, y + offsetY + ofy]) sqs
+        f = figures !! figIndex !! rotateIndex
+        sqs = squares f
+        ofx = ofx f
+        ofy = ofy f
 
 boardCellsFree :: [[Int]] -> Board -> Bool
 boardCellsFree coords board = False
