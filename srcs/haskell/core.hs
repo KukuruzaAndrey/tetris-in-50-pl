@@ -115,20 +115,34 @@ getFigCoords figIndex rotateIndex offsetX offsetY = if illegal coords
         f = figures !! figIndex !! rotateIndex
 
 
-boardCellsFree :: [[Int]] -> Board -> Bool
-boardCellsFree coords board = False
+boardCellsFree :: Board -> [[Int]] -> Bool
+boardCellsFree board = all (\(x:y:_) -> board !! x+board_w*y == '0')
 
 canPlace :: State -> Bool
-canPlace s = isJust coords && boardCellsFree (fromJust coords) (board s)
+canPlace s = isJust coords && boardCellsFree (board s) (fromJust coords)
              where coords = getFigCoords (figIndex s) (rotateIndex s) (offsetX s) (offsetY s)
 
 
 needNewFigure :: State -> Bool
-needNewFigure s = not $ canPlace s
+needNewFigure s = not $ canPlace s {offsetY = succ offsetY}
+
+createNewFig :: State -> State
+createNewFig state@(State{..}) = State
+                                 move
+                                 board
+                                 nextFigIndex
+                                 0
+                                 nextFigColor
+                                 (if figIndex == 0 then 3 else 4)
+                                 (-1 * ofy figures !! figIndex !! 0)
+                                 (fst $ randomR (0, 6) rg)
+                                 (fst $ randomR (1, 6) rg)
+                       
+removeFullLines :: State -> State
+removeFullLines s = s {board = board} {score = score}
 
 processNewFigure :: State -> State
-processNewFigure s = s
-
+processNewFigure = createNewFig . removeFullLines . addPieceToBoard
 
 update :: State -> StdGen -> State
 update INIT_STATE rg = State
